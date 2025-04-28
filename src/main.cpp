@@ -42,6 +42,24 @@ int main()
     bottomLimit[0].color = sf::Color::Green;
     bottomLimit[1].color = sf::Color::Green;
 
+    sf::VertexArray points {sf::PrimitiveType::Points, 10};
+    points[0].position = sf::Vector2f{200.f, 250.f};
+    points[1].position = sf::Vector2f{210.f, 250.f};
+    points[2].position = sf::Vector2f{220.f, 250.f};
+    points[3].position = sf::Vector2f{230.f, 250.f};
+    points[4].position = sf::Vector2f{240.f, 250.f};
+    points[5].position = sf::Vector2f{250.f, 250.f};
+    points[6].position = sf::Vector2f{260.f, 250.f};
+    points[7].position = sf::Vector2f{270.f, 250.f};
+    points[8].position = sf::Vector2f{280.f, 250.f};
+    points[9].position = sf::Vector2f{290.f, 250.f};
+
+    sf::Transform t {};
+
+
+
+    t.scale({0.5f, 0.5f});
+
     std::vector<sf::VertexArray> yFixedValues {};
 
     float yAxisHeight { std::abs(yAxis[0].position.y - yAxis[1].position.y) };
@@ -79,6 +97,7 @@ int main()
         {
             window.draw(dash);
         }
+        window.draw(points);
         window.display();
     }
 }
