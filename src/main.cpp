@@ -9,7 +9,9 @@
 #include <SFML/Window/VideoMode.hpp>
 #include <cstdint>
 #include <cstdlib>
-#include <vector>
+#include <array>
+#include <cmath>
+#include <queue>
 #include <iostream>
 
 float mapPointToGridY(float value, float yLimMin, float yLimMax, float yGridMin, float yGridMax, float windowHeight) {
@@ -58,32 +60,24 @@ int main()
     rightLimit[0].color = sf::Color::Green;
     rightLimit[1].color = sf::Color::Green;
 
-    int numPoints = 4500;
-    sf::VertexArray points {sf::PrimitiveType::Points, numPoints};
-    for (int i = 0; i < numPoints; ++i)
+    constexpr int numPoints { 400 };
+    constexpr double twoPi = 2.0 * M_PI;
+    std::queue<float> myQueue {};
+
+    std::array<sf::Vertex, numPoints> points {};
+
+    for (int i { 0 }; i < 10000; ++i)
     {
-        points[i].position = sf::Vector2f{mapPointToGridX(i, 0, 4500, xGridMin, xGridMax), mapPointToGridY(i, 0, 4500, yGridMin, yGridMax, windowHeight)};
-        // points[i].position = sf::Vector2f{mapPointToGridX(numPoints + i, 0, 4500, xGridMin, xGridMax), 250.f};
-        points[i].color = sf::Color::White;
+        myQueue.push(std::sin(twoPi * (static_cast<float>(i) / numPoints)));
     }
 
-    // std::vector<sf::VertexArray> yFixedValues {};
+    for (int i { 0 }; i < numPoints; ++i)
+    {
+        points[i].position = sf::Vector2f{0.f, 0.f};
+        points[i].color = sf::Color::Black;
+    }
 
-    // float yAxisHeight { std::abs(yAxis[0].position.y - yAxis[1].position.y) };
-    // int32_t yAxisSections = static_cast<int32_t>(yAxisHeight / 10.f);
-
-    // std::cout << yAxisSections << "\n";
-
-    // float yAxisFirstPosition { yAxis[0].position.y };
-    
-    // for (size_t i {1}; i < yAxisSections - 1; ++i) {
-    //     sf::VertexArray newVertexArray {sf::PrimitiveType::Lines, 2};
-
-    //     newVertexArray[0].position = sf::Vector2f{45.f, yAxisFirstPosition + (yAxisHeight / yAxisSections) * i};
-    //     newVertexArray[1].position = sf::Vector2f{55.f, yAxisFirstPosition + (yAxisHeight / yAxisSections) * i};
-
-    //     yFixedValues.push_back(newVertexArray);
-    // }
+    int currentPointsIdx = numPoints - 1;
 
     while (window.isOpen())
     {
@@ -95,6 +89,18 @@ int main()
             }
         }
 
+        if (!myQueue.empty())
+        {
+            points[currentPointsIdx].position.y = mapPointToGridY(myQueue.front(), -5.f, 5.f, yGridMin, yGridMax, windowHeight);
+            myQueue.pop();
+            points[currentPointsIdx].position.x = 450.f;
+            points[currentPointsIdx].color = sf::Color::White;
+            --currentPointsIdx;
+            if (currentPointsIdx < 0) {
+                currentPointsIdx = numPoints - 1;
+            }
+        }
+
         window.clear();
 
         window.draw(xAxis);
@@ -102,21 +108,14 @@ int main()
         window.draw(topLimit);
         window.draw(rightLimit);
 
-        window.draw(points);
-
-        // for (const auto& dash : yFixedValues)
-        // {
-        //     window.draw(dash);
-        // }
-
-        for (int i = 0; i < numPoints; ++i)
-        {
-            // std::cout << mapPointToGridX(1, 0, 4500, xGridMin, xGridMax) << "\n";
-            points[i].position -= sf::Vector2f(mapPointToGridX(1, 0, 4500, xGridMin, xGridMax), 0.f);
-        }
+        window.draw(points.data(), points.size(), sf::PrimitiveType::Points);
 
         window.display();
 
-        sf::sleep(sf::milliseconds(60));
+        for (auto& p : points) {
+            p.position.x -= 1.f;
+        }
     }
+
+    return 0;
 }
