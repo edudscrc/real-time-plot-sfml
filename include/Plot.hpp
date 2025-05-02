@@ -15,6 +15,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <iostream>
+#include <memory>
 
 class Grid
 {
@@ -45,9 +46,62 @@ public:
         this->m_axisX[1].color = sf::Color::Red;
         this->m_axisY[0].color = sf::Color::Red;
         this->m_axisY[1].color = sf::Color::Red;
+
+        this->drawVerticalLines();
+        this->drawHorizontalLines();
     }
 
     ~Grid() = default;
+
+    void drawVerticalLines(int32_t numVerticalLines = 10)
+    {
+        float width {(this->max.x - this->min.x) / (numVerticalLines + 1)};
+
+        std::vector<sf::VertexArray> verticalLines(numVerticalLines, sf::VertexArray{sf::PrimitiveType::Lines, 2});
+
+        for (int i {0}; i < numVerticalLines; ++i)
+        {
+            verticalLines[i][0].position = {this->min.x + width * (i + 1), this->min.y};
+            verticalLines[i][0].color = sf::Color(120, 120, 120);
+            verticalLines[i][1].position = {this->min.x + width * (i + 1), this->max.y};
+            verticalLines[i][1].color = sf::Color(120, 120, 120);
+        }
+
+        this->m_verticalLines = verticalLines;
+    }
+
+    void drawHorizontalLines(int32_t numHorizontalLines = 10)
+    {
+        float height {(this->max.y - this->min.y) / (numHorizontalLines + 1)};
+
+        std::vector<sf::VertexArray> horizontalLines(numHorizontalLines, sf::VertexArray{sf::PrimitiveType::Lines, 2});
+
+        for (int i {0}; i < numHorizontalLines; ++i)
+        {
+            horizontalLines[i][0].position = {this->min.x, this->min.y + height * (i + 1)};
+            horizontalLines[i][0].color = sf::Color(120, 120, 120);
+            horizontalLines[i][1].position = {this->max.x, this->min.y + height * (i + 1)};
+            horizontalLines[i][1].color = sf::Color(120, 120, 120);
+        }
+
+        this->m_horizontalLines = horizontalLines;
+
+        // sf::Text
+        // std::vector<sf::Text> axisTextY(numHorizontalLines, sf::Text{this->font});
+
+        for (int i {0}; i < numHorizontalLines; ++i) 
+        {
+            sf::Text newText{*this->font};
+            newText.setPosition(sf::Vector2f{this->min.x, this->m_horizontalLines[i][0].position.y});
+            newText.setString("1000");
+            newText.setCharacterSize(12);
+            newText.setFillColor(sf::Color::Black);
+            newText.setStyle(sf::Text::Regular);
+            this->m_axisTextY.push_back(newText);
+        }
+
+        // this->m_axisTextY = axisTextY;
+    }
 
     sf::Vector2f min{};
     sf::Vector2f max{};
@@ -56,6 +110,12 @@ public:
     sf::VertexArray m_axisRight{sf::PrimitiveType::Lines, 2};
     sf::VertexArray m_axisX{sf::PrimitiveType::Lines, 2};
     sf::VertexArray m_axisY{sf::PrimitiveType::Lines, 2};
+
+    std::vector<sf::VertexArray> m_verticalLines{};
+    std::vector<sf::VertexArray> m_horizontalLines{};
+
+    const sf::Font* font{ new sf::Font("JetBrainsMono-Regular.ttf") };
+    std::vector<sf::Text> m_axisTextY{};
 };
 
 class Plot

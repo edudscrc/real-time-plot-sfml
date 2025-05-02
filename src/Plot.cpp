@@ -51,7 +51,25 @@ void Plot::show()
             this->m_window.draw(this->m_axes[static_cast<int>(i + j * this->m_numRows)].m_axisRight);
             this->m_window.draw(this->m_axes[static_cast<int>(i + j * this->m_numRows)].m_axisX);
             this->m_window.draw(this->m_axes[static_cast<int>(i + j * this->m_numRows)].m_axisY);
+
+            for (const auto& verticalLine : this->m_axes[static_cast<int>(i + j * this->m_numRows)].m_verticalLines)
+            {
+                this->m_window.draw(verticalLine);
+            }
+            for (const auto& horizontalLine : this->m_axes[static_cast<int>(i + j * this->m_numRows)].m_horizontalLines)
+            {
+                this->m_window.draw(horizontalLine);
+            }
         }
     }
+
+    for (const auto& grid : this->m_axes)
+    {
+        for (int i = 0; i < 10; ++i)
+        {
+            this->m_window.draw(grid.m_axisTextY[i]);
+        }
+    }
+
     this->m_window.display();
 }

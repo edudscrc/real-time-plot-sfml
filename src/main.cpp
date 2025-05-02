@@ -124,7 +124,7 @@ int main()
 {
     Plot p{};
     p.createWindow(1280, 720);
-    p.createSubplots(1, 1, 50.f, 50.f);
+    p.createSubplots(2, 2, 50.f, 50.f);
 
     const int numPoints{ static_cast<int>(p.getSubplotSizeX()) };
 
