@@ -14,6 +14,49 @@
 #include <cstring>
 #include <fcntl.h>
 #include <unistd.h>
+#include <iostream>
+
+class Grid
+{
+public:
+    Grid() = default;
+    Grid(float xMin, float xMax, float yMin, float yMax)
+    {
+        this->min = {xMin, yMin};
+        this->max = {xMax, yMax};
+
+        this->m_axisTop[0].position = {xMin, yMin};
+        this->m_axisTop[1].position = {xMax, yMin};
+
+        this->m_axisRight[0].position = {xMax, yMin};
+        this->m_axisRight[1].position = {xMax, yMax};
+
+        this->m_axisX[0].position = {xMin, yMax};
+        this->m_axisX[1].position = {xMax, yMax};
+
+        this->m_axisY[0].position = {xMin, yMin};
+        this->m_axisY[1].position = {xMin, yMax};
+
+        this->m_axisTop[0].color = sf::Color::Red;
+        this->m_axisTop[1].color = sf::Color::Red;
+        this->m_axisRight[0].color = sf::Color::Red;
+        this->m_axisRight[1].color = sf::Color::Red;
+        this->m_axisX[0].color = sf::Color::Red;
+        this->m_axisX[1].color = sf::Color::Red;
+        this->m_axisY[0].color = sf::Color::Red;
+        this->m_axisY[1].color = sf::Color::Red;
+    }
+
+    ~Grid() = default;
+
+    sf::Vector2f min{};
+    sf::Vector2f max{};
+
+    sf::VertexArray m_axisTop{sf::PrimitiveType::Lines, 2};
+    sf::VertexArray m_axisRight{sf::PrimitiveType::Lines, 2};
+    sf::VertexArray m_axisX{sf::PrimitiveType::Lines, 2};
+    sf::VertexArray m_axisY{sf::PrimitiveType::Lines, 2};
+};
 
 class Plot
 {
@@ -30,29 +73,12 @@ private:
     float m_subplotSizeX{};
     float m_subplotSizeY{};
 
-    std::vector<float> m_gridCoordsMinX{};
-    std::vector<float> m_gridCoordsMaxX{};
-    std::vector<float> m_gridCoordsMinY{};
-    std::vector<float> m_gridCoordsMaxY{};
-
-    std::vector<float> m_gridCoordsTopMinX{};
-    std::vector<float> m_gridCoordsTopMaxX{};
-    std::vector<float> m_gridCoordsTopMinY{};
-    std::vector<float> m_gridCoordsTopMaxY{};
-
-    std::vector<float> m_gridCoordsRightMinX{};
-    std::vector<float> m_gridCoordsRightMaxX{};
-    std::vector<float> m_gridCoordsRightMinY{};
-    std::vector<float> m_gridCoordsRightMaxY{};
-
-    sf::VertexArray m_gridAxisX{};
-    sf::VertexArray m_gridAxisY{};
-
-    sf::VertexArray m_gridTopLimit{};
-    sf::VertexArray m_gridRightLimit{};
+    std::vector<Grid> m_axes{};
 public:
     Plot() = default;
     ~Plot() = default;
+
+    // const 
 
     constexpr uint32_t getWindowWidth() const
     {
@@ -64,24 +90,9 @@ public:
         return this->m_windowHeight;
     }
 
-    const std::vector<float>& getGridCoordsMaxX() const
+    const Grid& getGrid(size_t row, size_t col)
     {
-        return this->m_gridCoordsMaxX;
-    }
-
-    const std::vector<float>& getGridCoordsMinX() const
-    {
-        return this->m_gridCoordsMinX;
-    }
-
-    const std::vector<float>& getGridCoordsMaxY() const
-    {
-        return this->m_gridCoordsMaxY;
-    }
-
-    const std::vector<float>& getGridCoordsMinY() const
-    {
-        return this->m_gridCoordsMinY;
+        return this->m_axes.at(row + col * this->m_numRows);
     }
 
     constexpr float getSubplotSizeX() const
