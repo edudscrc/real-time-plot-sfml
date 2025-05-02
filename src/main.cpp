@@ -9,173 +9,204 @@
 #include <SFML/Window/VideoMode.hpp>
 #include <cstdint>
 #include <cstdlib>
+#include <array>
 #include <cmath>
+#include <queue>
+#include <iostream>
+#include <string>
+// #include <windows.h>
+#include <thread>
+#include <mutex>
+#include <condition_variable>
 #include <termios.h>
 #include <cstring>
 #include <fcntl.h>
 #include <unistd.h>
+#include "../include/Plot.hpp"
 
-const float mapPointToGridY(const float value, const float yLimMin, const float yLimMax, const float yGridMin, const float yGridMax, const float windowHeight) {
-    float v = ((value - yLimMin) / (yLimMax - yLimMin) * (yGridMax - yGridMin) + yGridMin);
-    return yGridMax - v + yGridMin;
-}
+// std::queue<std::string> serialQueue;
+// std::mutex queueMutex;
+// std::condition_variable queueCond;
+// bool running = true;
 
-class Plot
-{
-private:
-    sf::RenderWindow m_window{};
+// void serialReaderThread() {
+//     HANDLE hSerial = CreateFile(
+//         L"\\\\.\\COM3",
+//         GENERIC_READ,
+//         0,
+//         NULL,
+//         OPEN_EXISTING,
+//         0,
+//         NULL);
 
-    uint32_t m_windowWidth{};
-    uint32_t m_windowHeight{};
+//     if (hSerial == INVALID_HANDLE_VALUE) {
+//         std::cerr << "Erro ao abrir COM3." << std::endl;
+//         return;
+//     }
 
-    size_t m_numSubplots{};
-    size_t m_numRows{};
-    size_t m_numCols{};
+//     DCB dcbSerialParams = { 0 };
+//     dcbSerialParams.DCBlength = sizeof(dcbSerialParams);
+//     if (!GetCommState(hSerial, &dcbSerialParams)) {
+//         std::cerr << "Erro ao obter parâmetros da COM3." << std::endl;
+//         CloseHandle(hSerial);
+//         return;
+//     }
 
-    float m_subplotSizeX{};
-    float m_subplotSizeY{};
+//     dcbSerialParams.BaudRate = CBR_115200;
+//     dcbSerialParams.ByteSize = 8;
+//     dcbSerialParams.StopBits = ONESTOPBIT;
+//     dcbSerialParams.Parity = NOPARITY;
+//     dcbSerialParams.fOutxCtsFlow = FALSE;
+//     dcbSerialParams.fRtsControl = RTS_CONTROL_DISABLE;
 
-    std::vector<float> m_gridCoordsMinX{};
-    std::vector<float> m_gridCoordsMaxX{};
-    std::vector<float> m_gridCoordsMinY{};
-    std::vector<float> m_gridCoordsMaxY{};
+//     if (!SetCommState(hSerial, &dcbSerialParams)) {
+//         std::cerr << "Erro ao configurar COM3." << std::endl;
+//         CloseHandle(hSerial);
+//         return;
+//     }
 
-    sf::VertexArray m_gridAxisX{};
-    sf::VertexArray m_gridAxisY{};
-public:
-    Plot() = default;
-    ~Plot() = default;
+//     COMMTIMEOUTS timeouts = { 0 };
+//     timeouts.ReadIntervalTimeout = 50;
+//     timeouts.ReadTotalTimeoutConstant = 50;
+//     timeouts.ReadTotalTimeoutMultiplier = 10;
+//     SetCommTimeouts(hSerial, &timeouts);
 
-    constexpr uint32_t getWindowWidth() const
-    {
-        return this->m_windowWidth;
-    }
+//     FlushFileBuffers(hSerial);
 
-    constexpr uint32_t getWindowHeight() const
-    {
-        return this->m_windowHeight;
-    }
+//     std::string buffer;
+//     char ch;
+//     DWORD bytesRead;
 
-    const std::vector<float>& getGridCoordsMaxX() const
-    {
-        return this->m_gridCoordsMaxX;
-    }
+//     while (running) {
+//         if (ReadFile(hSerial, &ch, 1, &bytesRead, NULL) && bytesRead > 0) {
+//             if (ch == '\n') {
+//                 std::lock_guard<std::mutex> lock(queueMutex);
+//                 serialQueue.push(buffer);
+//                 buffer.clear();
+//                 queueCond.notify_one();
+//             }
+//             else {
+//                 buffer += ch;
+//             }
+//         }
+//     }
 
-    const std::vector<float>& getGridCoordsMinX() const
-    {
-        return this->m_gridCoordsMinX;
-    }
+//     CloseHandle(hSerial);
+// }
 
-    const std::vector<float>& getGridCoordsMaxY() const
-    {
-        return this->m_gridCoordsMaxY;
-    }
+// void serialReaderThread() {
+//     const char* port = "/dev/ttyUSB0";  // Altere se necessário
+//     int serialFd = open(port, O_RDONLY | O_NOCTTY);
+//     if (serialFd < 0) {
+//         std::cerr << "Erro ao abrir " << port << ": " << strerror(errno) << std::endl;
+//         return;
+//     }
 
-    const std::vector<float>& getGridCoordsMinY() const
-    {
-        return this->m_gridCoordsMinY;
-    }
+//     termios tty;
+//     memset(&tty, 0, sizeof tty);
+//     if (tcgetattr(serialFd, &tty) != 0) {
+//         std::cerr << "Erro em tcgetattr: " << strerror(errno) << std::endl;
+//         close(serialFd);
+//         return;
+//     }
 
-    constexpr float getSubplotSizeX() const
-    {
-        return this->m_subplotSizeX;
-    }
+//     // Configurações da porta serial
+//     cfsetospeed(&tty, B115200);
+//     cfsetispeed(&tty, B115200);
 
-    constexpr float getSubplotSizeY() const
-    {
-        return this->m_subplotSizeY;
-    }
+//     tty.c_cflag |= (CLOCAL | CREAD);    // Habilita recepção
+//     tty.c_cflag &= ~CSIZE;
+//     tty.c_cflag |= CS8;                 // 8 bits
+//     tty.c_cflag &= ~PARENB;             // Sem paridade
+//     tty.c_cflag &= ~CSTOPB;             // 1 stop bit
+//     tty.c_cflag &= ~CRTSCTS;            // Sem controle de fluxo
 
-    const sf::RenderWindow& getWindow() const
-    {
-        return this->m_window;
-    }
+//     tty.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG); // Modo raw
+//     tty.c_iflag &= ~(IXON | IXOFF | IXANY);         // Sem controle de fluxo por software
+//     tty.c_oflag &= ~OPOST;                          // Saída raw
 
-    void closeWindow()
-    {
-        this->m_window.close();
-    }
+//     // Timeouts de leitura
+//     tty.c_cc[VMIN] = 0;
+//     tty.c_cc[VTIME] = 1; // Timeout de 100ms
 
-    std::optional<sf::Event> pollWindowEvent()
-    {
-        return this->m_window.pollEvent();
-    }
+//     if (tcsetattr(serialFd, TCSANOW, &tty) != 0) {
+//         std::cerr << "Erro em tcsetattr: " << strerror(errno) << std::endl;
+//         close(serialFd);
+//         return;
+//     }
 
-    void createWindow(uint32_t width, uint32_t height)
-    {
-        this->m_windowWidth = width;
-        this->m_windowHeight = height;
+//     std::string buffer;
+//     char ch;
 
-        this->m_window = { sf::VideoMode{ {width, height} }, "Real-Time Plot" };
-    }
+//     while (running) {
+//         ssize_t n = read(serialFd, &ch, 1);
+//         if (n > 0) {
+//             if (ch == '\n') {
+//                 std::lock_guard<std::mutex> lock(queueMutex);
+//                 serialQueue.push(buffer);
+//                 buffer.clear();
+//                 queueCond.notify_one();
+//             } else {
+//                 buffer += ch;
+//             }
+//         } else {
+//             usleep(1000); // evita uso excessivo de CPU
+//         }
+//     }
 
-    void createSubplots(size_t numRows, size_t numCols, float offsetX = 10.f, float offsetY = 10.f)
-    {
-        this->m_numRows = numRows;
-        this->m_numCols = numCols;
+//     close(serialFd);
+// }
 
-        this->m_numSubplots = numRows * numCols;
-
-        this->m_subplotSizeX = (static_cast<float>(this->m_windowWidth) - ((numCols + 1) * offsetX)) / static_cast<float>(numCols);
-        this->m_subplotSizeY = (static_cast<float>(this->m_windowHeight) - ((numRows + 1) * offsetY)) / static_cast<float>(numRows);
-
-        for (int i{ 0 }; i < numRows; ++i)
-        {
-            for (int j{ 0 }; j < numCols; ++j)
-            {
-                this->m_gridCoordsMinX.push_back((offsetX * (j + 1)) + (this->m_subplotSizeX * j));
-                this->m_gridCoordsMaxX.push_back(((offsetX * (j + 1)) + (this->m_subplotSizeX * j)) + this->m_subplotSizeX);
-                this->m_gridCoordsMinY.push_back((offsetY * (i + 1)) + (this->m_subplotSizeY * i));
-                this->m_gridCoordsMaxY.push_back(((offsetY * (i + 1)) + (this->m_subplotSizeY * i)) + this->m_subplotSizeY);
-            }
-        }
-
-        this->m_gridAxisX = sf::VertexArray{sf::PrimitiveType::Lines, this->m_numSubplots * 2};
-        for (int i{ 0 }, j{ 0 }; i < this->m_numSubplots && j < (this->m_numSubplots * 2) - 1; ++i, j += 2)
-        {
-            this->m_gridAxisX[j].position = sf::Vector2f(this->m_gridCoordsMinX[i], this->m_gridCoordsMaxY[i]);
-            this->m_gridAxisX[j].color = sf::Color::Red;
-            this->m_gridAxisX[j + 1].position = sf::Vector2f(this->m_gridCoordsMaxX[i], this->m_gridCoordsMaxY[i]);
-            this->m_gridAxisX[j + 1].color = sf::Color::Red;
-        }
-
-        this->m_gridAxisY = sf::VertexArray{ sf::PrimitiveType::Lines, this->m_numSubplots * 2 };
-        for (int i{ 0 }, j{ 0 }; i < this->m_numSubplots && j < (this->m_numSubplots * 2) - 1; ++i, j += 2)
-        {
-            this->m_gridAxisY[j].position = sf::Vector2f(this->m_gridCoordsMinX[i], this->m_gridCoordsMinY[i]);
-            this->m_gridAxisY[j].color = sf::Color::Red;
-            this->m_gridAxisY[j + 1].position = sf::Vector2f(this->m_gridCoordsMinX[i], this->m_gridCoordsMaxY[i]);
-            this->m_gridAxisY[j + 1].color = sf::Color::Red;
-        }
-    }
-
-    void clear()
-    {
-        this->m_window.clear(sf::Color::White);
-    }
-
-    void plot(const sf::VertexArray& ref)
-    {
-        this->m_window.draw(ref);
-    }
-    void plot(const sf::RectangleShape& ref)
-    {
-        this->m_window.draw(ref);
-    }
-
-    void show()
-    {
-        this->m_window.draw(this->m_gridAxisX);
-        this->m_window.draw(this->m_gridAxisY);
-        this->m_window.display();
-    }
-};
+// const float mapPointToGridY(const float value, const float yLimMin, const float yLimMax, const float yGridMin, const float yGridMax, const float windowHeight) {
+//     float v = ((value - yLimMin) / (yLimMax - yLimMin) * (yGridMax - yGridMin) + yGridMin);
+//     return yGridMax - v + yGridMin;
+// }
 
 int main()
 {
     Plot p{};
     p.createWindow(800, 600);
     p.createSubplots(2, 2, 50.f, 50.f);
+
+    // const int numPoints{ static_cast<int>(p.getSubplotSizeX()) };
+
+    // std::vector<sf::RectangleShape> shapes1;
+    // std::vector<sf::RectangleShape> shapes2;
+    // std::vector<sf::RectangleShape> shapes3;
+    // std::vector<sf::RectangleShape> shapes4;
+
+    // for (int i{ 0 }; i < numPoints; ++i) {
+    //     shapes1.push_back(sf::RectangleShape{});
+    //     shapes1[i].setFillColor(sf::Color::Black);
+    //     shapes1[i].setPosition({ 0.f, 0.f });
+    //     shapes1[i].setSize({ 1.f, 5.f });
+        
+    //     shapes2.push_back(sf::RectangleShape{});
+    //     shapes2[i].setFillColor(sf::Color::Black);
+    //     shapes2[i].setPosition({ 0.f, 0.f });
+    //     shapes2[i].setSize({ 1.f, 5.f });
+
+    //     shapes3.push_back(sf::RectangleShape{});
+    //     shapes3[i].setFillColor(sf::Color::Black);
+    //     shapes3[i].setPosition({ 0.f, 0.f });
+    //     shapes3[i].setSize({ 1.f, 5.f });
+
+    //     shapes4.push_back(sf::RectangleShape{});
+    //     shapes4[i].setFillColor(sf::Color::Black);
+    //     shapes4[i].setPosition({ 0.f, 0.f });
+    //     shapes4[i].setSize({ 1.f, 5.f });
+    // }
+
+    // int currentPointsIdx1 = numPoints - 1;
+    // int currentPointsIdx2 = numPoints - 1;
+    // int currentPointsIdx3 = numPoints - 1;
+    // int currentPointsIdx4 = numPoints - 1;
+
+    // float value1{ 0.f };
+    // float value2{ 0.f };
+    // float value3{ 0.f };
+    // float value4{ 0.f };
+    // std::thread reader(serialReaderThread);
 
     while (p.getWindow().isOpen())
     {
@@ -187,6 +218,67 @@ int main()
             }
         }
 
+        // std::unique_lock<std::mutex> lock(queueMutex);
+        // queueCond.wait(lock, [] { return !serialQueue.empty(); });
+        // std::string data = serialQueue.front();
+        // serialQueue.pop();
+        // lock.unlock();
+
+        // std::cout << "data: " << data << "\n";
+
+        // size_t pos1 = data.find("|");
+        // if (pos1 != std::string::npos) {
+        //     std::string part1 = data.substr(0, pos1);
+        //     data = data.substr(pos1 + 1, data.size());
+        //     value1 = std::stof(part1);
+        // }
+        // size_t pos2 = data.find("|");
+        // if (pos2 != std::string::npos) {
+        //     std::string part2 = data.substr(0, pos2);
+        //     data = data.substr(pos2 + 1, data.size());
+        //     value2 = std::stof(part2);
+        // }
+        // size_t pos3 = data.find("|");
+        // if (pos3 != std::string::npos) {
+        //     std::string part3 = data.substr(0, pos3);
+        //     data = data.substr(pos3 + 1, data.size());
+        //     value3 = std::stof(part3);
+        // }
+        // size_t pos4 = data.find("|");
+        // if (pos4 != std::string::npos) {
+        //     std::string part4 = data.substr(0, pos4);
+        //     data = data.substr(pos4 + 1, data.size());
+        //     value4 = std::stof(part4);
+        // }
+
+        // shapes1[currentPointsIdx1].setPosition({ p.getGridCoordsMaxX()[0], mapPointToGridY(value1, 0.f, 1500.f, p.getGridCoordsMinY()[0], p.getGridCoordsMaxY()[0], static_cast<float>(p.getWindowHeight())) });
+        // shapes1[currentPointsIdx1].setFillColor(sf::Color::Magenta);
+        // --currentPointsIdx1;
+        // if (currentPointsIdx1 < 0) {
+        //     currentPointsIdx1 = numPoints - 1;
+        // }
+
+        // shapes2[currentPointsIdx2].setPosition({ p.getGridCoordsMaxX()[1], mapPointToGridY(value2, 0.f, 1500.f, p.getGridCoordsMinY()[1], p.getGridCoordsMaxY()[1], static_cast<float>(p.getWindowHeight())) });
+        // shapes2[currentPointsIdx2].setFillColor(sf::Color::Red);
+        // --currentPointsIdx2;
+        // if (currentPointsIdx2 < 0) {
+        //     currentPointsIdx2 = numPoints - 1;
+        // }
+
+        // shapes3[currentPointsIdx3].setPosition({ p.getGridCoordsMaxX()[2], mapPointToGridY(value3, 0.f, 1500.f, p.getGridCoordsMinY()[2], p.getGridCoordsMaxY()[2], static_cast<float>(p.getWindowHeight())) });
+        // shapes3[currentPointsIdx3].setFillColor(sf::Color::Blue);
+        // --currentPointsIdx3;
+        // if (currentPointsIdx3 < 0) {
+        //     currentPointsIdx3 = numPoints - 1;
+        // }
+
+        // shapes4[currentPointsIdx4].setPosition({ p.getGridCoordsMaxX()[3], mapPointToGridY(value4, 0.f, 1500.f, p.getGridCoordsMinY()[3], p.getGridCoordsMaxY()[3], static_cast<float>(p.getWindowHeight())) });
+        // shapes4[currentPointsIdx4].setFillColor(sf::Color::Green);
+        // --currentPointsIdx4;
+        // if (currentPointsIdx4 < 0) {
+        //     currentPointsIdx4 = numPoints - 1;
+        // }
+
         p.clear();
 
         // for (int i{ 0 }; i < numPoints; ++i) {
@@ -197,7 +289,42 @@ int main()
         // }
 
         p.show();
+        
+        // for (auto& s : shapes1)
+        // {
+        //     if (s.getPosition().x > p.getGridCoordsMinX()[0])
+        //     {
+        //         s.move({ -1.f, 0.f });
+        //     }
+        // }
+
+        // for (auto& s : shapes2)
+        // {
+        //     if (s.getPosition().x > p.getGridCoordsMinX()[1])
+        //     {
+        //         s.move({ -1.f, 0.f });
+        //     }
+        // }
+
+        // for (auto& s : shapes3)
+        // {
+        //     if (s.getPosition().x > p.getGridCoordsMinX()[2])
+        //     {
+        //         s.move({ -1.f, 0.f });
+        //     }
+        // }
+
+        // for (auto& s : shapes4)
+        // {
+        //     if (s.getPosition().x > p.getGridCoordsMinX()[3])
+        //     {
+        //         s.move({ -1.f, 0.f });
+        //     }
+        // }
     }
+
+    // running = false;
+    // reader.join();
 
     return 0;
 }
