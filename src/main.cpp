@@ -95,7 +95,7 @@ bool running = true;
 //     CloseHandle(hSerial);
 // }
 
-void serialReaderThread() {
+void generateRandomValuesThread(size_t numSubplots) {
     std::random_device rd;
     std::mt19937 gen { rd() };
     std::uniform_int_distribution<int32_t> dist { 100, 1000 };
@@ -103,7 +103,11 @@ void serialReaderThread() {
     std::string buffer{};
 
     while (running) {
-        buffer = std::to_string(dist(gen)) + "|" + std::to_string(dist(gen)) + "|" + std::to_string(dist(gen)) + "|" + std::to_string(dist(gen)) + "|\n";
+        for (size_t i{0}; i < numSubplots; ++i)
+        {
+            buffer += std::to_string(dist(gen)) + "|";
+        }
+        buffer += '\n';
         std::lock_guard<std::mutex> lock(queueMutex);
         serialQueue.push(buffer);
         buffer.clear();
@@ -120,47 +124,26 @@ int main()
 {
     Plot p{};
     p.createWindow(1280, 720);
-    p.createSubplots(5, 5, 50.f, 50.f);
+    p.createSubplots(1, 1, 50.f, 50.f);
 
     const int numPoints{ static_cast<int>(p.getSubplotSizeX()) };
 
-    std::vector<sf::RectangleShape> shapes1;
-    std::vector<sf::RectangleShape> shapes2;
-    std::vector<sf::RectangleShape> shapes3;
-    std::vector<sf::RectangleShape> shapes4;
+    std::vector<std::vector<sf::RectangleShape>> shapes(p.getNumSubplots(), {numPoints, sf::RectangleShape{}});
 
-    for (int i{ 0 }; i < numPoints; ++i) {
-        shapes1.push_back(sf::RectangleShape{});
-        shapes1[i].setFillColor(sf::Color::Black);
-        shapes1[i].setPosition({ 0.f, 0.f });
-        shapes1[i].setSize({ 1.f, 5.f });
-        
-        shapes2.push_back(sf::RectangleShape{});
-        shapes2[i].setFillColor(sf::Color::Black);
-        shapes2[i].setPosition({ 0.f, 0.f });
-        shapes2[i].setSize({ 1.f, 5.f });
-
-        shapes3.push_back(sf::RectangleShape{});
-        shapes3[i].setFillColor(sf::Color::Black);
-        shapes3[i].setPosition({ 0.f, 0.f });
-        shapes3[i].setSize({ 1.f, 5.f });
-
-        shapes4.push_back(sf::RectangleShape{});
-        shapes4[i].setFillColor(sf::Color::Black);
-        shapes4[i].setPosition({ 0.f, 0.f });
-        shapes4[i].setSize({ 1.f, 5.f });
+    for (int i{0}; i < p.getNumSubplots(); ++i)
+    {
+        for (int j{0}; j < numPoints; ++j)
+        {
+            shapes[i][j].setFillColor(sf::Color::Black);
+            shapes[i][j].setPosition({ 0.f, 0.f });
+            shapes[i][j].setSize({ 1.f, 5.f });
+        }
     }
 
-    int currentPointsIdx1 = numPoints - 1;
-    int currentPointsIdx2 = numPoints - 1;
-    int currentPointsIdx3 = numPoints - 1;
-    int currentPointsIdx4 = numPoints - 1;
+    std::vector<int> currentPointsIdx(p.getNumSubplots(), numPoints - 1);
+    std::vector<float> value(p.getNumSubplots(), 0.f);
 
-    float value1{ 0.f };
-    float value2{ 0.f };
-    float value3{ 0.f };
-    float value4{ 0.f };
-    std::thread reader(serialReaderThread);
+    std::thread reader(generateRandomValuesThread, p.getNumSubplots());
 
     while (p.getWindow().isOpen())
     {
@@ -178,101 +161,49 @@ int main()
         serialQueue.pop();
         lock.unlock();
 
-        // std::cout << "data: " << data << "\n";
+        std::cout << "data: " << data << "\n";
 
-        size_t pos1 = data.find("|");
-        if (pos1 != std::string::npos) {
-            std::string part1 = data.substr(0, pos1);
-            data = data.substr(pos1 + 1, data.size());
-            value1 = std::stof(part1);
-        }
-        size_t pos2 = data.find("|");
-        if (pos2 != std::string::npos) {
-            std::string part2 = data.substr(0, pos2);
-            data = data.substr(pos2 + 1, data.size());
-            value2 = std::stof(part2);
-        }
-        size_t pos3 = data.find("|");
-        if (pos3 != std::string::npos) {
-            std::string part3 = data.substr(0, pos3);
-            data = data.substr(pos3 + 1, data.size());
-            value3 = std::stof(part3);
-        }
-        size_t pos4 = data.find("|");
-        if (pos4 != std::string::npos) {
-            std::string part4 = data.substr(0, pos4);
-            data = data.substr(pos4 + 1, data.size());
-            value4 = std::stof(part4);
+        size_t pos{};
+        size_t tmpI{0};
+        while ((pos = data.find("|")) != std::string::npos)
+        {
+            std::string part = data.substr(0, pos);
+            data = data.substr(pos + 1, data.size());
+            value[tmpI] = std::stof(part);
+            ++tmpI;
         }
 
-        shapes1[currentPointsIdx1].setPosition({ p.getGrid(0, 0).max.x, mapPointToGridY(value1, 0.f, 2000.f, p.getGrid(0, 0).min.y, p.getGrid(0, 0).max.y, static_cast<float>(p.getWindowHeight())) });
-        shapes1[currentPointsIdx1].setFillColor(sf::Color::Magenta);
-        --currentPointsIdx1;
-        if (currentPointsIdx1 < 0) {
-            currentPointsIdx1 = numPoints - 1;
-        }
-
-        shapes2[currentPointsIdx2].setPosition({ p.getGrid(0, 1).max.x, mapPointToGridY(value2, 0.f, 2000.f, p.getGrid(0, 1).min.y, p.getGrid(0, 1).max.y, static_cast<float>(p.getWindowHeight())) });
-        shapes2[currentPointsIdx2].setFillColor(sf::Color::Red);
-        --currentPointsIdx2;
-        if (currentPointsIdx2 < 0) {
-            currentPointsIdx2 = numPoints - 1;
-        }
-
-        shapes3[currentPointsIdx3].setPosition({ p.getGrid(1, 0).max.x, mapPointToGridY(value3, 0.f, 2000.f, p.getGrid(1, 0).min.y, p.getGrid(1, 0).max.y, static_cast<float>(p.getWindowHeight())) });
-        shapes3[currentPointsIdx3].setFillColor(sf::Color::Blue);
-        --currentPointsIdx3;
-        if (currentPointsIdx3 < 0) {
-            currentPointsIdx3 = numPoints - 1;
-        }
-
-        shapes4[currentPointsIdx4].setPosition({ p.getGrid(1, 1).max.x, mapPointToGridY(value4, 0.f, 2000.f, p.getGrid(1, 1).min.y, p.getGrid(1, 1).max.y, static_cast<float>(p.getWindowHeight())) });
-        shapes4[currentPointsIdx4].setFillColor(sf::Color::Green);
-        --currentPointsIdx4;
-        if (currentPointsIdx4 < 0) {
-            currentPointsIdx4 = numPoints - 1;
+        for (int i{0}; i < p.getNumSubplots(); ++i)
+        {
+            shapes[i][currentPointsIdx[i]].setPosition({p.getGrid(i).max.x, mapPointToGridY(value[i], 0.f, 1500.f, p.getGrid(i).min.y, p.getGrid(i).max.y, static_cast<float>(p.getWindowHeight()))});
+            shapes[i][currentPointsIdx[i]].setFillColor(sf::Color::Magenta);
+            currentPointsIdx[i] -= 1;
+            if (currentPointsIdx[i] < 0)
+            {
+                currentPointsIdx[i] = numPoints - 1;
+            }
         }
 
         p.clear();
 
-        for (int i{ 0 }; i < numPoints; ++i) {
-            p.plot(shapes1[i]);
-            p.plot(shapes2[i]);
-            p.plot(shapes3[i]);
-            p.plot(shapes4[i]);
+        for (int i{0}; i < p.getNumSubplots(); ++i)
+        {
+            for (int j{0}; j < numPoints; ++j)
+            {
+                p.plot(shapes[i][j]);
+            }
         }
 
         p.show();
-        
-        for (auto& s : shapes1)
-        {
-            if (s.getPosition().x > p.getGrid(0, 0).min.x)
-            {
-                s.move({ -1.f, 0.f });
-            }
-        }
 
-        for (auto& s : shapes2)
+        for (int i{0}; i < p.getNumSubplots(); ++i)
         {
-            if (s.getPosition().x > p.getGrid(0, 1).min.x)
+            for (int j{0}; j < numPoints; ++j)
             {
-                s.move({ -1.f, 0.f });
-            }
-        }
-
-        for (auto& s : shapes3)
-        {
-            if (s.getPosition().x > p.getGrid(1, 0).min.x)
-            {
-                s.move({ -1.f, 0.f });
-            }
-        }
-
-        for (auto& s : shapes4)
-        {
-            if (s.getPosition().x > p.getGrid(1, 1).min.x)
-            {
-                s.move({ -1.f, 0.f });
+                if (shapes[i][j].getPosition().x > p.getGrid(i).min.x)
+                {
+                    shapes[i][j].move({-1.f, 0.f});
+                }
             }
         }
     }

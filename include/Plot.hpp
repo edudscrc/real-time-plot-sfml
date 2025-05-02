@@ -78,7 +78,12 @@ public:
     Plot() = default;
     ~Plot() = default;
 
-    // const 
+    // const
+
+    constexpr size_t getNumSubplots() const
+    {
+        return this->m_numSubplots;
+    }
 
     constexpr uint32_t getWindowWidth() const
     {
@@ -93,6 +98,10 @@ public:
     const Grid& getGrid(size_t row, size_t col)
     {
         return this->m_axes.at(row + col * this->m_numRows);
+    }
+    const Grid& getGrid(size_t idx)
+    {
+        return this->m_axes.at(idx);
     }
 
     constexpr float getSubplotSizeX() const
