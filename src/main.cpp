@@ -96,17 +96,19 @@ bool running = true;
 // }
 
 void generateRandomValuesThread(size_t numSubplots) {
-    std::random_device rd;
-    std::mt19937 gen { rd() };
-    std::uniform_int_distribution<int32_t> dist { 100, 1000 };
+    constexpr double amplitude = 500.0;
+    constexpr double frequency = 0.5;
+    double time = 0.0;
+    constexpr double timeStep = 0.01;
 
     std::string buffer{};
 
     while (running) {
         for (size_t i{0}; i < numSubplots; ++i)
         {
-            buffer += std::to_string(dist(gen)) + "|";
+            buffer += std::to_string(amplitude * std::sin(2.0 * M_PI * frequency * time)) + "|";
         }
+        time += timeStep;
         buffer += '\n';
         std::lock_guard<std::mutex> lock(queueMutex);
         serialQueue.push(buffer);
@@ -124,7 +126,7 @@ int main()
 {
     Plot p{};
     p.createWindow(1280, 720);
-    p.createSubplots(2, 2, 50.f, 50.f);
+    p.createSubplots(2, 2, -500.f, 500.f, 50.f, 50.f);
 
     const int numPoints{ static_cast<int>(p.getSubplotSizeX()) };
 
@@ -136,7 +138,7 @@ int main()
         {
             shapes[i][j].setFillColor(sf::Color::Black);
             shapes[i][j].setPosition({ 0.f, 0.f });
-            shapes[i][j].setSize({ 1.f, 5.f });
+            shapes[i][j].setSize({ 5.f, 5.f });
         }
     }
 
@@ -175,7 +177,7 @@ int main()
 
         for (int i{0}; i < p.getNumSubplots(); ++i)
         {
-            shapes[i][currentPointsIdx[i]].setPosition({p.getGrid(i).max.x, mapPointToGridY(value[i], 0.f, 1500.f, p.getGrid(i).min.y, p.getGrid(i).max.y, static_cast<float>(p.getWindowHeight()))});
+            shapes[i][currentPointsIdx[i]].setPosition({p.getGrid(i).max.x, mapPointToGridY(value[i], -500.f, 500.f, p.getGrid(i).min.y, p.getGrid(i).max.y, static_cast<float>(p.getWindowHeight()))});
             shapes[i][currentPointsIdx[i]].setFillColor(sf::Color::Magenta);
             currentPointsIdx[i] -= 1;
             if (currentPointsIdx[i] < 0)

@@ -10,7 +10,7 @@ void Plot::createWindow(uint32_t width, uint32_t height)
     this->m_window.setFramerateLimit(100u);
 }
 
-void Plot::createSubplots(size_t numRows, size_t numCols, float offsetX, float offsetY)
+void Plot::createSubplots(size_t numRows, size_t numCols, float yMinValue, float yMaxValue, float offsetX, float offsetY)
 {
     this->m_numRows = numRows;
     this->m_numCols = numCols;
@@ -19,8 +19,6 @@ void Plot::createSubplots(size_t numRows, size_t numCols, float offsetX, float o
 
     this->m_subplotSizeX = (static_cast<float>(this->m_windowWidth) - ((numCols + 1) * offsetX)) / static_cast<float>(numCols);
     this->m_subplotSizeY = (static_cast<float>(this->m_windowHeight) - ((numRows + 1) * offsetY)) / static_cast<float>(numRows);
-
-    // int32_t numVerticalLines { 10 };
 
     float xMin {};
     float xMax {};
@@ -36,7 +34,7 @@ void Plot::createSubplots(size_t numRows, size_t numCols, float offsetX, float o
             yMin = {(offsetY * (i + 1)) + (this->m_subplotSizeY * i)};
             yMax = {((offsetY * (i + 1)) + (this->m_subplotSizeY * i)) + this->m_subplotSizeY};
 
-            this->m_axes.push_back({xMin, xMax, yMin, yMax});
+            this->m_axes.push_back({xMin, xMax, yMin, yMax, yMinValue, yMaxValue});
         }
     }
 }
@@ -65,10 +63,11 @@ void Plot::show()
 
     for (const auto& grid : this->m_axes)
     {
-        for (int i = 0; i < 10; ++i)
+        for (const auto& text : grid.m_axisTextY)
         {
-            this->m_window.draw(grid.m_axisTextY[i]);
+            this->m_window.draw(text);
         }
+        
     }
 
     this->m_window.display();

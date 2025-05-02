@@ -14,6 +14,6 @@ FetchContent_MakeAvailable(SFML)
 
 find_package(Threads REQUIRED)
 
-add_executable(main src/main.cpp src/Plot.cpp)
+add_executable(main src/main.cpp src/Plot.cpp src/Grid.cpp)
 target_compile_features(main PRIVATE cxx_std_17)
 target_link_libraries(main PRIVATE SFML::Graphics Threads::Threads)
