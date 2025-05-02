@@ -9,146 +9,194 @@
 #include <SFML/Window/VideoMode.hpp>
 #include <cstdint>
 #include <cstdlib>
-#include <array>
 #include <cmath>
-#include <queue>
-#include <iostream>
+#include <termios.h>
+#include <cstring>
+#include <fcntl.h>
+#include <unistd.h>
 
-float mapPointToGridY(float value, float yLimMin, float yLimMax, float yGridMin, float yGridMax, float windowHeight) {
-    return (yGridMax + yGridMin) - ((value - yLimMin) / (yLimMax - yLimMin) * (yGridMax - yGridMin) + yGridMin);
+const float mapPointToGridY(const float value, const float yLimMin, const float yLimMax, const float yGridMin, const float yGridMax, const float windowHeight) {
+    float v = ((value - yLimMin) / (yLimMax - yLimMin) * (yGridMax - yGridMin) + yGridMin);
+    return yGridMax - v + yGridMin;
 }
 
-float mapPointToGridX(float value, float xLimMin, float xLimMax, float xGridMin, float xGridMax) {
-    return (value - xLimMin) / (xLimMax - xLimMin) * (xGridMax - xGridMin) + xGridMin;
-}
+class Plot
+{
+private:
+    sf::RenderWindow m_window{};
+
+    uint32_t m_windowWidth{};
+    uint32_t m_windowHeight{};
+
+    size_t m_numSubplots{};
+    size_t m_numRows{};
+    size_t m_numCols{};
+
+    float m_subplotSizeX{};
+    float m_subplotSizeY{};
+
+    std::vector<float> m_gridCoordsMinX{};
+    std::vector<float> m_gridCoordsMaxX{};
+    std::vector<float> m_gridCoordsMinY{};
+    std::vector<float> m_gridCoordsMaxY{};
+
+    sf::VertexArray m_gridAxisX{};
+    sf::VertexArray m_gridAxisY{};
+public:
+    Plot() = default;
+    ~Plot() = default;
+
+    constexpr uint32_t getWindowWidth() const
+    {
+        return this->m_windowWidth;
+    }
+
+    constexpr uint32_t getWindowHeight() const
+    {
+        return this->m_windowHeight;
+    }
+
+    const std::vector<float>& getGridCoordsMaxX() const
+    {
+        return this->m_gridCoordsMaxX;
+    }
+
+    const std::vector<float>& getGridCoordsMinX() const
+    {
+        return this->m_gridCoordsMinX;
+    }
+
+    const std::vector<float>& getGridCoordsMaxY() const
+    {
+        return this->m_gridCoordsMaxY;
+    }
+
+    const std::vector<float>& getGridCoordsMinY() const
+    {
+        return this->m_gridCoordsMinY;
+    }
+
+    constexpr float getSubplotSizeX() const
+    {
+        return this->m_subplotSizeX;
+    }
+
+    constexpr float getSubplotSizeY() const
+    {
+        return this->m_subplotSizeY;
+    }
+
+    const sf::RenderWindow& getWindow() const
+    {
+        return this->m_window;
+    }
+
+    void closeWindow()
+    {
+        this->m_window.close();
+    }
+
+    std::optional<sf::Event> pollWindowEvent()
+    {
+        return this->m_window.pollEvent();
+    }
+
+    void createWindow(uint32_t width, uint32_t height)
+    {
+        this->m_windowWidth = width;
+        this->m_windowHeight = height;
+
+        this->m_window = { sf::VideoMode{ {width, height} }, "Real-Time Plot" };
+    }
+
+    void createSubplots(size_t numRows, size_t numCols, float offsetX = 10.f, float offsetY = 10.f)
+    {
+        this->m_numRows = numRows;
+        this->m_numCols = numCols;
+
+        this->m_numSubplots = numRows * numCols;
+
+        this->m_subplotSizeX = (static_cast<float>(this->m_windowWidth) - ((numCols + 1) * offsetX)) / static_cast<float>(numCols);
+        this->m_subplotSizeY = (static_cast<float>(this->m_windowHeight) - ((numRows + 1) * offsetY)) / static_cast<float>(numRows);
+
+        for (int i{ 0 }; i < numRows; ++i)
+        {
+            for (int j{ 0 }; j < numCols; ++j)
+            {
+                this->m_gridCoordsMinX.push_back((offsetX * (j + 1)) + (this->m_subplotSizeX * j));
+                this->m_gridCoordsMaxX.push_back(((offsetX * (j + 1)) + (this->m_subplotSizeX * j)) + this->m_subplotSizeX);
+                this->m_gridCoordsMinY.push_back((offsetY * (i + 1)) + (this->m_subplotSizeY * i));
+                this->m_gridCoordsMaxY.push_back(((offsetY * (i + 1)) + (this->m_subplotSizeY * i)) + this->m_subplotSizeY);
+            }
+        }
+
+        this->m_gridAxisX = sf::VertexArray{sf::PrimitiveType::Lines, this->m_numSubplots * 2};
+        for (int i{ 0 }, j{ 0 }; i < this->m_numSubplots && j < (this->m_numSubplots * 2) - 1; ++i, j += 2)
+        {
+            this->m_gridAxisX[j].position = sf::Vector2f(this->m_gridCoordsMinX[i], this->m_gridCoordsMaxY[i]);
+            this->m_gridAxisX[j].color = sf::Color::Red;
+            this->m_gridAxisX[j + 1].position = sf::Vector2f(this->m_gridCoordsMaxX[i], this->m_gridCoordsMaxY[i]);
+            this->m_gridAxisX[j + 1].color = sf::Color::Red;
+        }
+
+        this->m_gridAxisY = sf::VertexArray{ sf::PrimitiveType::Lines, this->m_numSubplots * 2 };
+        for (int i{ 0 }, j{ 0 }; i < this->m_numSubplots && j < (this->m_numSubplots * 2) - 1; ++i, j += 2)
+        {
+            this->m_gridAxisY[j].position = sf::Vector2f(this->m_gridCoordsMinX[i], this->m_gridCoordsMinY[i]);
+            this->m_gridAxisY[j].color = sf::Color::Red;
+            this->m_gridAxisY[j + 1].position = sf::Vector2f(this->m_gridCoordsMinX[i], this->m_gridCoordsMaxY[i]);
+            this->m_gridAxisY[j + 1].color = sf::Color::Red;
+        }
+    }
+
+    void clear()
+    {
+        this->m_window.clear(sf::Color::White);
+    }
+
+    void plot(const sf::VertexArray& ref)
+    {
+        this->m_window.draw(ref);
+    }
+    void plot(const sf::RectangleShape& ref)
+    {
+        this->m_window.draw(ref);
+    }
+
+    void show()
+    {
+        this->m_window.draw(this->m_gridAxisX);
+        this->m_window.draw(this->m_gridAxisY);
+        this->m_window.display();
+    }
+};
 
 int main()
 {
-    constexpr uint16_t windowWidth { 800u };
-    constexpr uint16_t windowHeight { 800u };
+    Plot p{};
+    p.createWindow(800, 600);
+    p.createSubplots(2, 2, 50.f, 50.f);
 
-    constexpr float xGridMin { 100.f };
-    constexpr float xGridMax { 700.f };
-    constexpr float yGridMin { 50.f };
-    constexpr float yGridMax { 450.f };
-
-    sf::Font font { "JetBrainsMono-Regular.ttf" };
-    sf::Text xAxisText { font };
-    xAxisText.setString("X Axis");
-    xAxisText.setFillColor(sf::Color::White);
-    xAxisText.setCharacterSize(16);
-    xAxisText.setPosition({static_cast<float>((xGridMax + xGridMin) / 2.f), yGridMax + 16.f });
-    sf::Text yAxisText { font };
-    yAxisText.setString("Y Axis");
-    yAxisText.setFillColor(sf::Color::White);
-    yAxisText.setCharacterSize(16);
-    yAxisText.rotate(sf::degrees(-90));
-    yAxisText.setPosition({xGridMin - 24.f, static_cast<float>((xGridMax + yGridMin) / 2.f)});
-
-    sf::RenderWindow window {sf::VideoMode{{windowWidth, windowHeight}}, "Real-Time Plot"};
-
-    window.setFramerateLimit(100);
-
-    sf::VertexArray xAxis {sf::PrimitiveType::Lines, 2};
-    xAxis[0].position = sf::Vector2f{xGridMin, yGridMax};
-    xAxis[1].position = sf::Vector2f{xGridMax, yGridMax};
-    xAxis[0].color = sf::Color::Blue;
-    xAxis[1].color = sf::Color::Blue;
-
-    sf::VertexArray yAxis {sf::PrimitiveType::Lines, 2};
-    yAxis[0].position = sf::Vector2f{xGridMin, yGridMin};
-    yAxis[1].position = sf::Vector2f{xGridMin, yGridMax};
-    yAxis[0].color = sf::Color::Blue;
-    yAxis[1].color = sf::Color::Blue;
-
-    sf::VertexArray topLimit {sf::PrimitiveType::Lines, 2};
-    topLimit[0].position = sf::Vector2f{xGridMin, yGridMin};
-    topLimit[1].position = sf::Vector2f{xGridMax, yGridMin};
-    topLimit[0].color = sf::Color::Green;
-    topLimit[1].color = sf::Color::Green;
-
-    sf::VertexArray rightLimit {sf::PrimitiveType::Lines, 2};
-    rightLimit[0].position = sf::Vector2f{xGridMax, yGridMin};
-    rightLimit[1].position = sf::Vector2f{xGridMax, yGridMax};
-    rightLimit[0].color = sf::Color::Green;
-    rightLimit[1].color = sf::Color::Green;
-
-    constexpr int numPoints { static_cast<int>(xGridMax) - static_cast<int>(xGridMin) };
-    constexpr double twoPi = 2.0 * M_PI;
-    std::queue<float> myQueue {};
-
-    // std::array<sf::Vertex, numPoints> points {};
-
-    std::array<sf::RectangleShape, numPoints> shapes {};
-
-    for (int i { 0 }; i < 10000; ++i)
+    while (p.getWindow().isOpen())
     {
-        myQueue.push(std::sin(twoPi * (static_cast<float>(i) / numPoints)));
-    }
-
-    // for (auto& p : points)
-    // {
-    //     p.position = sf::Vector2f{0.f, 0.f};
-    //     p.color = sf::Color::Black;
-    // }
-
-    for (auto& s : shapes)
-    {
-        s.setFillColor(sf::Color::Black);
-        s.setPosition({0.f, 0.f});
-        s.setSize({1.f, 5.f});
-    }
-
-    int currentPointsIdx = numPoints - 1;
-
-    while (window.isOpen())
-    {
-        while (const std::optional event {window.pollEvent()})
+        while (const std::optional event{ p.pollWindowEvent() })
         {
             if (event->is<sf::Event::Closed>())
             {
-                window.close();
+                p.closeWindow();
             }
         }
 
-        if (!myQueue.empty())
-        {
-            // points[currentPointsIdx].position.y = mapPointToGridY(myQueue.front(), -5.f, 5.f, yGridMin, yGridMax, windowHeight);
-            shapes[currentPointsIdx].setPosition({xGridMax, mapPointToGridY(myQueue.front(), -5.f, 5.f, yGridMin, yGridMax, windowHeight)});
-            myQueue.pop();
-            shapes[currentPointsIdx].setFillColor(sf::Color::White);
-            // points[currentPointsIdx].position.x = 450.f;
-            // points[currentPointsIdx].color = sf::Color::White;
-            --currentPointsIdx;
-            if (currentPointsIdx < 0) {
-                currentPointsIdx = numPoints - 1;
-            }
-        }
+        p.clear();
 
-        window.clear();
-
-        window.draw(xAxis);
-        window.draw(yAxis);
-        window.draw(topLimit);
-        window.draw(rightLimit);
-
-        window.draw(xAxisText);
-        window.draw(yAxisText);
-
-        // window.draw(points.data(), points.size(), sf::PrimitiveType::Points);
-        for (auto& s : shapes) {
-            window.draw(s);
-        }
-
-        window.display();
-
-        // for (auto& p : points) {
-        //     p.position.x -= 1.f;
+        // for (int i{ 0 }; i < numPoints; ++i) {
+        //     p.plot(shapes1[i]);
+        //     p.plot(shapes2[i]);
+        //     p.plot(shapes3[i]);
+        //     p.plot(shapes4[i]);
         // }
 
-        for (auto& s : shapes) {
-            s.move({-1.f, 0.f});
-        }
+        p.show();
     }
 
     return 0;
