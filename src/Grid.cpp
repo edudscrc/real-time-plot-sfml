@@ -1,7 +1,16 @@
 #include "../include/Grid.hpp"
 
 Grid::Grid(float xMin, float xMax, float yMin, float yMax, float yMinValue, float yMaxValue)
+    : m_sizeX{xMax - xMin}, m_sizeY{yMax - yMin},
+      m_points{static_cast<int32_t>(xMax - xMin), sf::RectangleShape{{5.f, 5.f}}},
+      m_currentPointIdx{static_cast<int32_t>(xMax - xMin) - 1}
 {
+    for (size_t i{0}; i < this->m_sizeX; ++i)
+    {
+        this->m_points[i].setPosition({0.f, 0.f});
+        this->m_points[i].setFillColor(sf::Color::White);
+    }
+
     this->yMinValue = yMinValue;
     this->yMaxValue = yMaxValue;
 
@@ -35,11 +44,11 @@ Grid::Grid(float xMin, float xMax, float yMin, float yMax, float yMinValue, floa
 
 void Grid::drawVerticalLines(int32_t numVerticalLines)
 {
-    float width {(this->max.x - this->min.x) / (numVerticalLines + 1)};
+    float width{(this->max.x - this->min.x) / (numVerticalLines + 1)};
 
     std::vector<sf::VertexArray> verticalLines(numVerticalLines, sf::VertexArray{sf::PrimitiveType::Lines, 2});
 
-    for (int i {0}; i < numVerticalLines; ++i)
+    for (int i{0}; i < numVerticalLines; ++i)
     {
         verticalLines[i][0].position = {this->min.x + width * (i + 1), this->min.y};
         verticalLines[i][0].color = sf::Color(120, 120, 120);
@@ -52,11 +61,11 @@ void Grid::drawVerticalLines(int32_t numVerticalLines)
 
 void Grid::drawHorizontalLines(int32_t numHorizontalLines)
 {
-    float height {(this->max.y - this->min.y) / (numHorizontalLines + 1)};
+    float height{(this->max.y - this->min.y) / (numHorizontalLines + 1)};
 
     std::vector<sf::VertexArray> horizontalLines(numHorizontalLines, sf::VertexArray{sf::PrimitiveType::Lines, 2});
 
-    for (int i {0}; i < numHorizontalLines; ++i)
+    for (int i{0}; i < numHorizontalLines; ++i)
     {
         horizontalLines[i][0].position = {this->min.x, this->min.y + height * (i + 1)};
         horizontalLines[i][0].color = sf::Color(120, 120, 120);
@@ -71,7 +80,7 @@ void Grid::drawHorizontalLines(int32_t numHorizontalLines)
 
 void Grid::drawAxisTicksY(int32_t numHorizontalLines)
 {
-    float auxValue {(this->yMaxValue - this->yMinValue) / (numHorizontalLines + 2)};
+    float auxValue{(this->yMaxValue - this->yMinValue) / (numHorizontalLines + 2)};
 
     {
         sf::Text newText{*this->font};
@@ -84,7 +93,7 @@ void Grid::drawAxisTicksY(int32_t numHorizontalLines)
         this->m_axisTextY.push_back(newText);
     }
 
-    for (int i {0}; i < numHorizontalLines; ++i) 
+    for (int i{0}; i < numHorizontalLines; ++i)
     {
         sf::Text newText{*this->font};
         newText.setString(std::to_string(static_cast<int>(this->yMaxValue - (auxValue * (i + 1)))));
@@ -105,5 +114,16 @@ void Grid::drawAxisTicksY(int32_t numHorizontalLines)
         newText.setFillColor(sf::Color::Black);
         newText.setStyle(sf::Text::Regular);
         this->m_axisTextY.push_back(newText);
+    }
+}
+
+void Grid::send(const double value)
+{
+    this->m_points[this->m_currentPointIdx].setPosition({this->max.x, this->mapPointToGridY(value)});
+    this->m_points[this->m_currentPointIdx].setFillColor(sf::Color::Red);
+    --(this->m_currentPointIdx);
+    if (this->m_currentPointIdx < 0)
+    {
+        this->m_currentPointIdx = this->m_sizeX - 1;
     }
 }

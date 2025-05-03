@@ -7,20 +7,20 @@
 #include <SFML/Graphics/VertexArray.hpp>
 #include <SFML/System/Vector2.hpp>
 #include <SFML/Window/VideoMode.hpp>
+#include <cmath>
 #include <cstdint>
 #include <cstdlib>
-#include <cmath>
-#include <termios.h>
 #include <cstring>
 #include <fcntl.h>
-#include <unistd.h>
 #include <iostream>
 #include <memory>
+#include <termios.h>
+#include <unistd.h>
 
 class Grid
 {
-public:
-    Grid() = default;
+  public:
+    Grid() = delete;
     Grid(float xMin, float xMax, float yMin, float yMax, float yMinValue, float yMaxValue);
 
     ~Grid() = default;
@@ -30,6 +30,17 @@ public:
     void drawHorizontalLines(int32_t numHorizontalLines = 10);
 
     void drawAxisTicksY(int32_t numHorizontalLines);
+
+    void send(const double value);
+
+    const float mapPointToGridY(const float value)
+    {
+        float v = ((value - this->yMinValue) / (this->yMaxValue - this->yMinValue) * m_sizeY + this->min.y);
+        return this->max.y - v + this->min.y;
+    }
+
+    float m_sizeX{};
+    float m_sizeY{};
 
     float yMinValue{};
     float yMaxValue{};
@@ -45,6 +56,9 @@ public:
     std::vector<sf::VertexArray> m_verticalLines{};
     std::vector<sf::VertexArray> m_horizontalLines{};
 
-    const sf::Font* font{ new sf::Font("JetBrainsMono-Regular.ttf") };
+    const sf::Font *font{new sf::Font("JetBrainsMono-Regular.ttf")};
     std::vector<sf::Text> m_axisTextY{};
+
+    std::vector<sf::RectangleShape> m_points{};
+    int32_t m_currentPointIdx{};
 };
