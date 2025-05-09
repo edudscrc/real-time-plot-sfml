@@ -20,7 +20,11 @@ class Grid2D
     sf::Vector2f m_size;
 
     // std::deque<sf::CircleShape> m_dataPoints{};
-    std::deque<Point> m_dataPoints{};
+    // std::deque<Point> m_dataPoints{};
+    uint32_t m_currentPointIdx{0};
+    size_t m_firstIdx{0};
+    size_t m_lastIdx;
+    std::vector<Point> m_dataPoints;
 
     float m_valueMinY{-1000.f};
     float m_valueMaxY{1000.f};
@@ -46,6 +50,9 @@ class Grid2D
     void initTicks();
 
     void setLimY(float minLimY, float maxLimY);
+
+    void setDataPointsRadius(float radius);
+    void setDataPointsColor(const sf::Color& color);
 
     void update(const float value);
     void render(sf::RenderWindow &window) const;

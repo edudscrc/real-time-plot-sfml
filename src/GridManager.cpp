@@ -27,6 +27,16 @@ void GridManager::setGridLimY(float minLim, float maxLim, size_t row, size_t col
     m_grids.at(row + col * m_numRows).setLimY(minLim, maxLim);
 }
 
+void GridManager::setGridDataSize(float size, size_t row, size_t col)
+{
+    m_grids.at(row + col * m_numRows).setDataPointsRadius(size);
+}
+
+void GridManager::setGridDataColor(const sf::Color& color, size_t row, size_t col)
+{
+    m_grids.at(row + col * m_numRows).setDataPointsColor(color);
+}
+
 void GridManager::sendData(const float value, size_t row, size_t col)
 {
     m_grids.at(row + col * m_numRows).update(value);

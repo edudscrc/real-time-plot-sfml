@@ -18,6 +18,10 @@ class Point
         Point(float value, float radius, const sf::Color &color, const sf::Vector2f &position);
         ~Point() = default;
 
+        void setPosition(const sf::Vector2f &position);
+        void setRadius(float radius);
+        void setColor(const sf::Color& color);
+
         void update();
         void render(sf::RenderWindow& window) const;
 };

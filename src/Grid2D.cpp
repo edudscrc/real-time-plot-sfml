@@ -2,7 +2,9 @@
 
 Grid2D::Grid2D(const sf::Vector2f &minCoords, const sf::Vector2f &maxCoords)
     : m_coordsMin{minCoords.x, minCoords.y}, m_coordsMax{maxCoords.x, maxCoords.y},
-      m_size{maxCoords.x - minCoords.x, maxCoords.y - minCoords.y}
+      m_size{maxCoords.x - minCoords.x, maxCoords.y - minCoords.y},
+      m_dataPoints({static_cast<size_t>(maxCoords.x - minCoords.x), Point{0.f, 0.5f, sf::Color::Red, {m_coordsMax.x + 1000.f, this->mapPointToGrid(0.f)}}}),
+      m_lastIdx{static_cast<size_t>(maxCoords.x - minCoords.x) - 1}
 {
     this->initSpines();
     this->initGridLines();
@@ -103,30 +105,40 @@ void Grid2D::setLimY(float minLimY, float maxLimY)
     m_valueMaxY = maxLimY;
 }
 
+void Grid2D::setDataPointsRadius(float radius)
+{
+    for (auto& point : m_dataPoints)
+    {
+        point.setRadius(radius);
+    }
+}
+
+void Grid2D::setDataPointsColor(const sf::Color& color)
+{
+    for (auto& point : m_dataPoints)
+    {
+        point.setColor(color);
+    }
+}
+
 void Grid2D::update(const float value)
 {
-    if (m_dataPoints.size() >= m_size.x)
-    {
-        m_dataPoints.pop_front();
-    }
+    // if (m_dataPoints.size() >= m_size.x)
+    // {
+    //     m_dataPoints.pop_front();
+    // }
 
-    // m_dataPoints.push_back(sf::CircleShape{0.5f, 30UL});
-    m_dataPoints.push_back(Point{value, 0.5f, sf::Color::Red, {m_coordsMax.x, this->mapPointToGrid(value)}});
-    // m_dataPoints.back().setFillColor(sf::Color::White);
-    // m_dataPoints.back().setPosition({m_coordsMax.x, this->mapPointToGrid(value)});
+    // m_dataPoints.push_back(Point{value, 0.5f, sf::Color::Red, {m_coordsMax.x, this->mapPointToGrid(value)}});
+    m_dataPoints[m_currentPointIdx].setPosition({m_coordsMax.x, this->mapPointToGrid(value)});
+    ++m_currentPointIdx;
+    if (m_currentPointIdx > m_lastIdx)
+    {
+        m_currentPointIdx = 0;
+    }
 
     for (auto &point : m_dataPoints)
     {
         point.update();
-        // point.move({-1.f, 0.f});
-        // if (point.getPosition().x <= m_coordsMin.x || point.getPosition().x >= m_coordsMax.x)
-        // {
-        //     point.setFillColor(sf::Color::White);
-        // }
-        // else
-        // {
-        //     point.setFillColor(sf::Color::Red);
-        // }
     }
 }
 

@@ -46,6 +46,10 @@ int main()
     GridManager gm{2, 2, window.getSize()};
     gm.setGridLimY(-500.f, 500.f, 0, 0);
 
+    gm.setGridDataColor(sf::Color::Blue, 1, 1);
+
+    gm.setGridDataSize(2.f, 1, 0);
+
     std::vector<float> value(4, 0.f);
     std::thread reader(generateRandomValuesThread, 4);
 
