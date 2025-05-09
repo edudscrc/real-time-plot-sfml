@@ -7,6 +7,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include "Point.hpp"
 
 class Grid2D
 {
@@ -18,10 +19,11 @@ class Grid2D
 
     sf::Vector2f m_size;
 
-    std::deque<sf::CircleShape> m_dataPoints{};
+    // std::deque<sf::CircleShape> m_dataPoints{};
+    std::deque<Point> m_dataPoints{};
 
-    float m_valueMinY{};
-    float m_valueMaxY{};
+    float m_valueMinY{-1000.f};
+    float m_valueMaxY{1000.f};
 
     std::unordered_map<std::string, sf::VertexArray> m_spines;
 
@@ -36,17 +38,19 @@ class Grid2D
 
   public:
     Grid2D() = delete;
-    Grid2D(sf::Vector2f minCoords, sf::Vector2f maxCoords);
+    Grid2D(const sf::Vector2f &minCoords, const sf::Vector2f &maxCoords);
     ~Grid2D() = default;
 
     void initSpines();
     void initGridLines();
     void initTicks();
 
-    void initLim(float minLimY, float maxLimY);
+    void setLimY(float minLimY, float maxLimY);
 
-    void update();
+    void update(const float value);
     void render(sf::RenderWindow &window) const;
+
+    const float mapPointToGrid(const float pointValue) const;
 };
 
 #endif

@@ -1,6 +1,6 @@
 #include "../include/GridManager.hpp"
 
-GridManager::GridManager(size_t numRows, size_t numCols, sf::Vector2u windowSize)
+GridManager::GridManager(size_t numRows, size_t numCols, const sf::Vector2u &windowSize)
     : m_numRows{numRows}, m_numCols{numCols}, m_numGrids{numRows * numCols}, m_windowSize{windowSize},
       m_padding{10.f * m_windowSize.x / 100.f, 10.f * m_windowSize.y / 100.f}
 
@@ -8,9 +8,9 @@ GridManager::GridManager(size_t numRows, size_t numCols, sf::Vector2u windowSize
     sf::Vector2f gridSize{(windowSize.x - (numCols + 1) * m_padding.x) / numCols,
                           (windowSize.y - (numRows + 1) * m_padding.y) / numRows};
 
-    for (int col{0}; col < numCols; ++col)
+    for (size_t col{0}; col < numCols; ++col)
     {
-        for (int row{0}; row < numRows; ++row)
+        for (size_t row{0}; row < numRows; ++row)
         {
             float xMin{(col + 1) * m_padding.x + col * gridSize.x};
             float xMax{xMin + gridSize.x};
@@ -22,13 +22,23 @@ GridManager::GridManager(size_t numRows, size_t numCols, sf::Vector2u windowSize
     }
 }
 
-void GridManager::update()
+void GridManager::setGridLimY(float minLim, float maxLim, size_t row, size_t col)
 {
-    for (auto &grid : m_grids)
-    {
-        grid.update();
-    }
+    m_grids.at(row + col * m_numRows).setLimY(minLim, maxLim);
 }
+
+void GridManager::sendData(const float value, size_t row, size_t col)
+{
+    m_grids.at(row + col * m_numRows).update(value);
+}
+
+// void GridManager::update()
+// {
+//     for (auto &grid : m_grids)
+//     {
+//         grid.update();
+//     }
+// }
 
 void GridManager::render(sf::RenderWindow &window) const
 {

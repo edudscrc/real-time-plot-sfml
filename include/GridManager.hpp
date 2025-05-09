@@ -20,10 +20,13 @@ class GridManager
 
   public:
     GridManager() = delete;
-    GridManager(size_t numRows, size_t numCols, sf::Vector2u windowSize);
+    GridManager(size_t numRows, size_t numCols, const sf::Vector2u &windowSize);
     ~GridManager() = default;
 
-    void update();
+    void setGridLimY(float minLim, float maxLim, size_t row, size_t col);
+    void sendData(const float value, size_t row, size_t col);
+
+    // void update();
     void render(sf::RenderWindow &window) const;
 };
 
