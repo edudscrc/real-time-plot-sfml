@@ -39,6 +39,22 @@ class Grid
         return this->max.y - v + this->min.y;
     }
 
+    const float mapPointToGridY_2(const float value)
+    {
+        float dataRange = this->yMaxValue - this->yMinValue;
+        float pixelRange = this->max.y - this->min.y;
+
+        // normalized_value = (data_y_value - data_y_min) / data_range
+        float normalizedValue = (value - this->yMinValue) / dataRange;
+        float pixel_y = this->max.y - (normalizedValue * pixelRange);
+
+        return pixel_y;
+        // float v = ((value - this->yMinValue) / (this->yMaxValue - this->yMinValue) * m_sizeY + this->min.y);
+        // return this->max.y - v + this->min.y;
+    }
+
+    float m_pixelSize{5.f};
+
     float m_sizeX{};
     float m_sizeY{};
 

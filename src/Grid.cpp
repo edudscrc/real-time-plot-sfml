@@ -2,7 +2,7 @@
 
 Grid::Grid(float xMin, float xMax, float yMin, float yMax, float yMinValue, float yMaxValue)
     : m_sizeX{xMax - xMin}, m_sizeY{yMax - yMin},
-      m_points{static_cast<int32_t>(xMax - xMin), sf::RectangleShape{{5.f, 5.f}}},
+      m_points{static_cast<int32_t>(xMax - xMin), sf::RectangleShape{{this->m_pixelSize, this->m_pixelSize}}},
       m_currentPointIdx{static_cast<int32_t>(xMax - xMin) - 1}
 {
     for (size_t i{0}; i < this->m_sizeX; ++i)
@@ -18,16 +18,16 @@ Grid::Grid(float xMin, float xMax, float yMin, float yMax, float yMinValue, floa
     this->max = {xMax, yMax};
 
     this->m_axisTop[0].position = {xMin, yMin};
-    this->m_axisTop[1].position = {xMax, yMin};
+    this->m_axisTop[1].position = {xMax + this->m_pixelSize, yMin};
 
-    this->m_axisRight[0].position = {xMax, yMin};
-    this->m_axisRight[1].position = {xMax, yMax};
+    this->m_axisRight[0].position = {xMax + this->m_pixelSize, yMin};
+    this->m_axisRight[1].position = {xMax + this->m_pixelSize, yMax + this->m_pixelSize};
 
-    this->m_axisX[0].position = {xMin, yMax};
-    this->m_axisX[1].position = {xMax, yMax};
+    this->m_axisX[0].position = {xMin, yMax + this->m_pixelSize};
+    this->m_axisX[1].position = {xMax + this->m_pixelSize, yMax + this->m_pixelSize};
 
     this->m_axisY[0].position = {xMin, yMin};
-    this->m_axisY[1].position = {xMin, yMax};
+    this->m_axisY[1].position = {xMin, yMax + this->m_pixelSize};
 
     this->m_axisTop[0].color = sf::Color::Red;
     this->m_axisTop[1].color = sf::Color::Red;
@@ -119,7 +119,7 @@ void Grid::drawAxisTicksY(int32_t numHorizontalLines)
 
 void Grid::send(const double value)
 {
-    this->m_points[this->m_currentPointIdx].setPosition({this->max.x, this->mapPointToGridY(value)});
+    this->m_points[this->m_currentPointIdx].setPosition({this->max.x, this->mapPointToGridY_2(value)});
     this->m_points[this->m_currentPointIdx].setFillColor(sf::Color::Red);
     --(this->m_currentPointIdx);
     if (this->m_currentPointIdx < 0)
