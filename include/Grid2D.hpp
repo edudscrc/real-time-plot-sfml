@@ -21,7 +21,7 @@ class Grid2D
 
     // std::deque<sf::CircleShape> m_dataPoints{};
     // std::deque<Point> m_dataPoints{};
-    uint32_t m_currentPointIdx{0};
+    size_t m_currentPointIdx{0};
     size_t m_firstIdx{0};
     size_t m_lastIdx;
     std::vector<Point> m_dataPoints;
