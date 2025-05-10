@@ -140,6 +140,11 @@ void Grid2D::setDataPointsColor(const sf::Color &color)
     }
 }
 
+void Grid2D::sendData(const float value)
+{
+    this->update(value);
+}
+
 void Grid2D::update(const float value)
 {
     const float currentDataPointRadius = m_dataPoints[m_currentPointIdx].getRadius();

@@ -55,6 +55,8 @@ class Grid2D
     void setDataPointsRadius(float radius);
     void setDataPointsColor(const sf::Color &color);
 
+    void sendData(const float value);
+
     void update(const float value);
     void render(sf::RenderWindow &window) const;
 

@@ -5,7 +5,7 @@
 #include <string>
 #include <thread>
 
-#include "../include/GridManager.hpp"
+#include "../include/Plot.hpp"
 
 std::queue<std::string> serialQueue;
 std::mutex queueMutex;
@@ -38,32 +38,28 @@ void generateRandomValuesThread(size_t numSubplots)
 
 int main()
 {
-    sf::RenderWindow window{sf::VideoMode{{1280u, 720u}}, "Teste"};
+    Plot p{2, 2, {1280u, 720u}};
 
-    window.setFramerateLimit(100u);
+    p[0][0].setLimY(-500.f, 500.f);
 
-    GridManager gm{2, 2, window.getSize()};
-    gm.setGridLimY(-500.f, 500.f, 0, 0);
+    p[1][1].setDataPointsColor(sf::Color::Blue);
 
-    gm.setGridDataColor(sf::Color::Blue, 1, 1);
-
-    gm.setGridLimY(-500.f, 500.f, 1, 0);
-    gm.setGridPointSize(5.f, 1, 0);
-    gm.setGridPointSize(2.f, 1, 1);
-    gm.setGridPointSize(10.f, 0, 1);
-    gm.setGridLimY(-500.f, 500.f, 0, 1);
-    // gm.setGridPointSize(5.f, 1, 0);
+    p[1][0].setLimY(-500.f, 500.f);
+    p[1][0].setDataPointsRadius(5.f);
+    p[1][1].setDataPointsRadius(2.f);
+    p[0][1].setDataPointsRadius(10.f);
+    p[0][1].setLimY(-500.f, 500.f);
 
     std::vector<float> value(4, 0.f);
     std::thread reader(generateRandomValuesThread, 4);
 
-    while (window.isOpen())
+    while (p.window().isOpen())
     {
-        while (const std::optional event{window.pollEvent()})
+        while (const std::optional event{p.window().pollEvent()})
         {
             if (event->is<sf::Event::Closed>())
             {
-                window.close();
+                p.window().close();
             }
         }
 
@@ -87,13 +83,14 @@ int main()
         {
             for (size_t row{0}; row < 2; ++row)
             {
-                gm.sendData(value[row + col * 2], row, col);
+                p[row][col].sendData(value[row + col * 2]);
             }
         }
 
-        window.clear(sf::Color::White);
-        gm.render(window);
-        window.display();
+        // p.window().clear(sf::Color::White);
+        // gm.render(p.window());
+        p.render();
+        // p.window().display();
     }
 
     running = false;

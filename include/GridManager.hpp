@@ -30,6 +30,11 @@ class GridManager
 
     void sendData(const float value, size_t row, size_t col);
 
+    Grid2D &getGrid(size_t row, size_t col)
+    {
+        return m_grids[row + col * m_numRows];
+    }
+
     // void update();
     void render(sf::RenderWindow &window) const;
 };

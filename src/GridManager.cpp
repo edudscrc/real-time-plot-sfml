@@ -39,7 +39,8 @@ void GridManager::setGridDataColor(const sf::Color &color, size_t row, size_t co
 
 void GridManager::sendData(const float value, size_t row, size_t col)
 {
-    m_grids.at(row + col * m_numRows).update(value);
+    m_grids.at(row + col * m_numRows).sendData(value);
+    // m_grids.at(row + col * m_numRows).update(value);
 }
 
 // void GridManager::update()
