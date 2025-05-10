@@ -19,10 +19,15 @@ void Point::setRadius(float radius)
     m_shape.setRadius(radius);
 }
 
-void Point::setColor(const sf::Color& color)
+void Point::setColor(const sf::Color &color)
 {
     m_color = color;
     m_shape.setFillColor(color);
+}
+
+const float &Point::getRadius() const
+{
+    return m_radius;
 }
 
 void Point::update()
@@ -31,7 +36,7 @@ void Point::update()
     m_position = m_shape.getPosition();
 }
 
-void Point::render(sf::RenderWindow& window) const
+void Point::render(sf::RenderWindow &window) const
 {
     window.draw(m_shape);
 }

@@ -1,6 +1,5 @@
 #include <cmath>
 #include <condition_variable>
-// #include <iostream>
 #include <mutex>
 #include <queue>
 #include <string>
@@ -48,7 +47,12 @@ int main()
 
     gm.setGridDataColor(sf::Color::Blue, 1, 1);
 
-    gm.setGridDataSize(2.f, 1, 0);
+    gm.setGridLimY(-500.f, 500.f, 1, 0);
+    gm.setGridPointSize(5.f, 1, 0);
+    gm.setGridPointSize(2.f, 1, 1);
+    gm.setGridPointSize(10.f, 0, 1);
+    gm.setGridLimY(-500.f, 500.f, 0, 1);
+    // gm.setGridPointSize(5.f, 1, 0);
 
     std::vector<float> value(4, 0.f);
     std::thread reader(generateRandomValuesThread, 4);

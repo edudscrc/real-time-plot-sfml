@@ -1,29 +1,29 @@
 #ifndef GRID_2D_HPP
 #define GRID_2D_HPP
 
+#include "Point.hpp"
 #include <SFML/Graphics.hpp>
 #include <deque>
 #include <memory>
 #include <string>
 #include <unordered_map>
 #include <vector>
-#include "Point.hpp"
+
+#include <iostream>
 
 class Grid2D
 {
   private:
     const std::shared_ptr<sf::Font> m_font{std::make_shared<sf::Font>("JetBrainsMono-Regular.ttf")};
+    size_t m_currentPointIdx{0};
 
     sf::Vector2f m_coordsMin;
     sf::Vector2f m_coordsMax;
 
+    // For reference when resizing points' radius
+    sf::Vector2f m_sizeOld;
     sf::Vector2f m_size;
 
-    // std::deque<sf::CircleShape> m_dataPoints{};
-    // std::deque<Point> m_dataPoints{};
-    size_t m_currentPointIdx{0};
-    size_t m_firstIdx{0};
-    size_t m_lastIdx;
     std::vector<Point> m_dataPoints;
 
     float m_valueMinY{-1000.f};
@@ -46,18 +46,19 @@ class Grid2D
     ~Grid2D() = default;
 
     void initSpines();
+    void updateSpines();
     void initGridLines();
     void initTicks();
 
     void setLimY(float minLimY, float maxLimY);
 
     void setDataPointsRadius(float radius);
-    void setDataPointsColor(const sf::Color& color);
+    void setDataPointsColor(const sf::Color &color);
 
     void update(const float value);
     void render(sf::RenderWindow &window) const;
 
-    const float mapPointToGrid(const float pointValue) const;
+    const float mapPointToGrid(const float pointValue, const float pointRadius) const;
 };
 
 #endif

@@ -25,8 +25,8 @@ class GridManager
 
     void setGridLimY(float minLim, float maxLim, size_t row, size_t col);
 
-    void setGridDataSize(float size, size_t row, size_t col);
-    void setGridDataColor(const sf::Color& color, size_t row, size_t col);
+    void setGridPointSize(float size, size_t row, size_t col);
+    void setGridDataColor(const sf::Color &color, size_t row, size_t col);
 
     void sendData(const float value, size_t row, size_t col);
 

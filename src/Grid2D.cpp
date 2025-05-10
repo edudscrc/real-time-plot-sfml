@@ -2,9 +2,10 @@
 
 Grid2D::Grid2D(const sf::Vector2f &minCoords, const sf::Vector2f &maxCoords)
     : m_coordsMin{minCoords.x, minCoords.y}, m_coordsMax{maxCoords.x, maxCoords.y},
+      m_sizeOld{maxCoords.x - minCoords.x, maxCoords.y - minCoords.y},
       m_size{maxCoords.x - minCoords.x, maxCoords.y - minCoords.y},
-      m_dataPoints({static_cast<size_t>(maxCoords.x - minCoords.x), Point{0.f, 0.5f, sf::Color::Red, {m_coordsMax.x + 1000.f, this->mapPointToGrid(0.f)}}}),
-      m_lastIdx{static_cast<size_t>(maxCoords.x - minCoords.x) - 1}
+      m_dataPoints({static_cast<size_t>(maxCoords.x - minCoords.x),
+                    Point{0.f, 0.5f, sf::Color::Red, {-100.f, this->mapPointToGrid(0.f, 0.5f)}}})
 {
     this->initSpines();
     this->initGridLines();
@@ -20,6 +21,11 @@ void Grid2D::initSpines()
     // y-axis
     m_spines.emplace("left", sf::VertexArray{sf::PrimitiveType::Lines, 2});
 
+    this->updateSpines();
+}
+
+void Grid2D::updateSpines()
+{
     // Left pixel
     m_spines.at("top")[0].position = {m_coordsMin.x, m_coordsMin.y};
     m_spines.at("top")[0].color = sf::Color::Black;
@@ -107,15 +113,28 @@ void Grid2D::setLimY(float minLimY, float maxLimY)
 
 void Grid2D::setDataPointsRadius(float radius)
 {
-    for (auto& point : m_dataPoints)
+    m_coordsMax.x += radius * 2.f;
+    m_coordsMax.y += radius * 2.f;
+
+    m_size = {m_coordsMax.x - m_coordsMin.x, m_coordsMax.y - m_coordsMin.y};
+
+    this->updateSpines();
+    m_horizontalLines.clear();
+    m_verticalLines.clear();
+    this->initGridLines();
+    m_ticksY.clear();
+    m_ticksX.clear();
+    this->initTicks();
+
+    for (auto &point : m_dataPoints)
     {
         point.setRadius(radius);
     }
 }
 
-void Grid2D::setDataPointsColor(const sf::Color& color)
+void Grid2D::setDataPointsColor(const sf::Color &color)
 {
-    for (auto& point : m_dataPoints)
+    for (auto &point : m_dataPoints)
     {
         point.setColor(color);
     }
@@ -123,15 +142,14 @@ void Grid2D::setDataPointsColor(const sf::Color& color)
 
 void Grid2D::update(const float value)
 {
-    // if (m_dataPoints.size() >= m_size.x)
-    // {
-    //     m_dataPoints.pop_front();
-    // }
+    const float currentDataPointRadius = m_dataPoints[m_currentPointIdx].getRadius();
 
-    // m_dataPoints.push_back(Point{value, 0.5f, sf::Color::Red, {m_coordsMax.x, this->mapPointToGrid(value)}});
-    m_dataPoints[m_currentPointIdx].setPosition({m_coordsMax.x, this->mapPointToGrid(value)});
+    m_dataPoints[m_currentPointIdx].setPosition(
+        {m_coordsMax.x - currentDataPointRadius * 2.f, this->mapPointToGrid(value, currentDataPointRadius)});
+
     ++m_currentPointIdx;
-    if (m_currentPointIdx > m_lastIdx)
+
+    if (m_currentPointIdx >= m_dataPoints.size())
     {
         m_currentPointIdx = 0;
     }
@@ -166,7 +184,6 @@ void Grid2D::render(sf::RenderWindow &window) const
 
     for (const auto &point : m_dataPoints)
     {
-        // window.draw(point);
         point.render(window);
     }
 
@@ -176,9 +193,9 @@ void Grid2D::render(sf::RenderWindow &window) const
     window.draw(m_spines.at("left"));
 }
 
-const float Grid2D::mapPointToGrid(const float pointValue) const
+const float Grid2D::mapPointToGrid(const float pointValue, const float pointRadius) const
 {
     float valueRangeY{m_valueMaxY - m_valueMinY};
     float normalizedValue{(pointValue - m_valueMinY) / valueRangeY};
-    return m_coordsMax.y - (normalizedValue * m_size.y);
+    return (m_coordsMax.y - pointRadius * 2.f) - (normalizedValue * m_sizeOld.y);
 }
