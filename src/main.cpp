@@ -14,7 +14,7 @@ bool running = true;
 
 void generateRandomValuesThread(size_t numSubplots)
 {
-    constexpr double amplitude = 500.0;
+    constexpr double amplitude = 326.0;
     constexpr double frequency = 0.5;
     double time = 0.0;
     constexpr double timeStep = 0.01;
@@ -87,10 +87,7 @@ int main()
             }
         }
 
-        // p.window().clear(sf::Color::White);
-        // gm.render(p.window());
         p.render();
-        // p.window().display();
     }
 
     running = false;

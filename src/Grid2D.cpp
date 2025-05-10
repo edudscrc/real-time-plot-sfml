@@ -10,6 +10,7 @@ Grid2D::Grid2D(const sf::Vector2f &minCoords, const sf::Vector2f &maxCoords)
     this->initSpines();
     this->initGridLines();
     this->initTicks();
+    this->initTickLabels();
 }
 
 void Grid2D::initSpines()
@@ -87,7 +88,7 @@ void Grid2D::initTicks()
     for (const auto &line : m_horizontalLines)
     {
         sf::VertexArray newTick{sf::PrimitiveType::Lines, 2};
-        newTick[0].position = sf::Vector2f{line[0].position} - sf::Vector2f{10.f, 0.f};
+        newTick[0].position = sf::Vector2f{line[0].position} - sf::Vector2f{5.f, 0.f};
         newTick[0].color = sf::Color::Black;
         newTick[1].position = sf::Vector2f{line[0].position};
         newTick[1].color = sf::Color::Black;
@@ -99,9 +100,24 @@ void Grid2D::initTicks()
         sf::VertexArray newTick{sf::PrimitiveType::Lines, 2};
         newTick[0].position = sf::Vector2f{line[1].position};
         newTick[0].color = sf::Color::Black;
-        newTick[1].position = sf::Vector2f{line[1].position} + sf::Vector2f{0.f, 10.f};
+        newTick[1].position = sf::Vector2f{line[1].position} + sf::Vector2f{0.f, 5.f};
         newTick[1].color = sf::Color::Black;
-        m_ticksY.push_back(newTick);
+        m_ticksX.push_back(newTick);
+    }
+}
+
+void Grid2D::initTickLabels()
+{
+    for (const auto &tick : m_ticksY)
+    {
+        float pointValue{mapGridToPoint(tick[0].position.y)};
+        sf::Text newText{*m_font, std::to_string(pointValue)};
+        newText.setCharacterSize(12u);
+        newText.setFillColor(sf::Color::Red);
+        sf::FloatRect textBounds{newText.getGlobalBounds()};
+        newText.setPosition(tick[0].position -
+                            sf::Vector2f{textBounds.size.x + newText.getCharacterSize() / 2.f, textBounds.size.y});
+        m_tickLabelsY.push_back(newText);
     }
 }
 
@@ -125,6 +141,8 @@ void Grid2D::setDataPointsRadius(float radius)
     m_ticksY.clear();
     m_ticksX.clear();
     this->initTicks();
+    m_tickLabelsY.clear();
+    this->initTickLabels();
 
     for (auto &point : m_dataPoints)
     {
@@ -187,6 +205,11 @@ void Grid2D::render(sf::RenderWindow &window) const
         window.draw(tick);
     }
 
+    for (const auto &tickLabel : m_tickLabelsY)
+    {
+        window.draw(tickLabel);
+    }
+
     for (const auto &point : m_dataPoints)
     {
         point.render(window);
@@ -203,4 +226,15 @@ const float Grid2D::mapPointToGrid(const float pointValue, const float pointRadi
     float valueRangeY{m_valueMaxY - m_valueMinY};
     float normalizedValue{(pointValue - m_valueMinY) / valueRangeY};
     return (m_coordsMax.y - pointRadius * 2.f) - (normalizedValue * m_sizeOld.y);
+}
+
+const float Grid2D::mapGridToPoint(const float gridValue) const
+{
+    float pointValue =
+        ((gridValue - (m_coordsMax.y - 10.f)) * (m_valueMaxY - m_valueMinY) - m_valueMinY * m_sizeOld.y) / m_sizeOld.y;
+    pointValue *= -1.f;
+    return pointValue;
+    // float valueRangeY{m_valueMaxY - m_valueMinY};
+    // float normalizedValue{(m_coordsMax.y - gridValue) / m_sizeOld.y};
+    // return m_valueMinY + (normalizedValue * valueRangeY);
 }

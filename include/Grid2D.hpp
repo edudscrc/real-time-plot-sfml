@@ -49,6 +49,7 @@ class Grid2D
     void updateSpines();
     void initGridLines();
     void initTicks();
+    void initTickLabels();
 
     void setLimY(float minLimY, float maxLimY);
 
@@ -61,6 +62,7 @@ class Grid2D
     void render(sf::RenderWindow &window) const;
 
     const float mapPointToGrid(const float pointValue, const float pointRadius) const;
+    const float mapGridToPoint(const float gridValue) const;
 };
 
 #endif

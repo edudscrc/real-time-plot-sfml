@@ -53,7 +53,6 @@ class Plot
         m_gridManager.render(m_window);
         m_window.display();
     }
-    // void setLimitsY();
 };
 
 #endif
