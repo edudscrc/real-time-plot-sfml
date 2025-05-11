@@ -1,11 +1,10 @@
 #include "../include/Point.hpp"
 
-Point::Point(float value, float radius, const sf::Color &color, const sf::Vector2f &position)
-    : m_value(value), m_radius{radius}, m_color{color}, m_position{position}, m_shape{radius}
+Point::Point()
 {
-    m_shape.setOrigin({radius, radius});
-    m_shape.setFillColor(color);
-    m_shape.setPosition(position);
+    m_shape.setOrigin({m_radius, m_radius});
+    m_shape.setFillColor(m_color);
+    m_shape.setPosition(m_position);
 }
 
 void Point::setPosition(const sf::Vector2f &position)

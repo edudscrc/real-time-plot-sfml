@@ -6,16 +6,15 @@
 class Point
 {
   private:
-    float m_value;
-    float m_radius;
-    sf::Color m_color;
-    sf::Vector2f m_position;
+    float m_value{-1.f};
+    float m_radius{2.f};
+    sf::Color m_color{sf::Color::Red};
+    sf::Vector2f m_position{-100.f, -100.f};
 
     sf::CircleShape m_shape;
 
   public:
-    Point() = delete;
-    Point(float value, float radius, const sf::Color &color, const sf::Vector2f &position);
+    Point();
     ~Point() = default;
 
     void setPosition(const sf::Vector2f &position);

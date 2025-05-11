@@ -46,8 +46,8 @@ class Grid2D
     ~Grid2D() = default;
 
     void initSpines();
-    void updateSpines();
-    void initGridLines();
+    void updateSpines(const float pointRadius);
+    void initGridLines(const float pointRadius);
     void initTicks();
     void initTickLabels();
 

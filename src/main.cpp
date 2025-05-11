@@ -14,7 +14,7 @@ bool running = true;
 
 void generateRandomValuesThread(size_t numSubplots)
 {
-    constexpr double amplitude = 326.0;
+    constexpr double amplitude = 333.0;
     constexpr double frequency = 0.5;
     double time = 0.0;
     constexpr double timeStep = 0.01;
@@ -41,14 +41,16 @@ int main()
     Plot p{2, 2, {1280u, 720u}};
 
     p[0][0].setLimY(-500.f, 500.f);
+    p[0][1].setLimY(-500.f, 500.f);
+    p[1][0].setLimY(-500.f, 500.f);
+    p[1][1].setLimY(-500.f, 500.f);
 
     p[1][1].setDataPointsColor(sf::Color::Blue);
 
-    p[1][0].setLimY(-500.f, 500.f);
     p[1][0].setDataPointsRadius(5.f);
     p[1][1].setDataPointsRadius(2.f);
     p[0][1].setDataPointsRadius(10.f);
-    p[0][1].setLimY(-500.f, 500.f);
+    p[0][0].setDataPointsRadius(1.f);
 
     std::vector<float> value(4, 0.f);
     std::thread reader(generateRandomValuesThread, 4);
