@@ -1,9 +1,15 @@
+#include <cerrno>
 #include <cmath>
 #include <condition_variable>
+#include <cstring>
+#include <fcntl.h>
+#include <iostream>
 #include <mutex>
 #include <queue>
 #include <string>
+#include <termios.h>
 #include <thread>
+#include <unistd.h>
 
 #include "../include/Plot.hpp"
 
@@ -14,7 +20,7 @@ bool running = true;
 
 void generateRandomValuesThread(size_t numSubplots)
 {
-    constexpr double amplitude = 333.0;
+    constexpr double amplitude = 409.0;
     constexpr double frequency = 0.5;
     double time = 0.0;
     constexpr double timeStep = 0.01;
@@ -33,6 +39,7 @@ void generateRandomValuesThread(size_t numSubplots)
         serialQueue.push(buffer);
         buffer.clear();
         queueCond.notify_one();
+        // std::this_thread::sleep_for(std::chrono::microseconds(1));
     }
 }
 

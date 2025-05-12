@@ -15,10 +15,10 @@ class Plot
     {
       private:
         GridManager &m_gm;
-        size_t &m_row;
+        size_t m_row;
 
       public:
-        PlotProxy(GridManager &gm, size_t &row) : m_gm{gm}, m_row{row}
+        PlotProxy(GridManager &gm, size_t row) : m_gm{gm}, m_row{row}
         {
         }
 

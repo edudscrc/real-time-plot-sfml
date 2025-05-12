@@ -56,7 +56,7 @@ void Grid2D::updateSpines(const float pointRadius)
 
 void Grid2D::initGridLines(const float pointRadius)
 {
-    size_t numHorizontalLines{5};
+    size_t numHorizontalLines{10};
     float gap{m_size.y / (numHorizontalLines + 1)};
 
     for (size_t i{0}; i < numHorizontalLines; ++i)
@@ -68,7 +68,7 @@ void Grid2D::initGridLines(const float pointRadius)
         m_horizontalLines[i][1].color = sf::Color(220, 220, 220);
     }
 
-    size_t numVerticalLines{5};
+    size_t numVerticalLines{10};
     gap = m_size.x / (numVerticalLines + 1);
 
     for (size_t i{0}; i < numVerticalLines; ++i)
@@ -109,9 +109,11 @@ void Grid2D::initTickLabels()
     for (const auto &tick : m_ticksY)
     {
         float pointValue{mapGridToPoint(tick[0].position.y)};
-        sf::Text newText{*m_font, std::to_string(pointValue)};
+        std::ostringstream textStream;
+        textStream << std::fixed << std::setprecision(2) << pointValue;
+        sf::Text newText{*m_font, textStream.str()};
         newText.setCharacterSize(12u);
-        newText.setFillColor(sf::Color::Red);
+        newText.setFillColor(sf::Color::Black);
         sf::FloatRect textBounds{newText.getGlobalBounds()};
         newText.setPosition(tick[0].position -
                             sf::Vector2f{textBounds.size.x + newText.getCharacterSize() / 2.f, textBounds.size.y});
