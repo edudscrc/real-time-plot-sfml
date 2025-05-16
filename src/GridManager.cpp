@@ -2,7 +2,7 @@
 
 GridManager::GridManager(size_t numRows, size_t numCols, const sf::Vector2u &windowSize)
     : m_numRows{numRows}, m_numCols{numCols}, m_numGrids{numRows * numCols}, m_windowSize{windowSize},
-      m_padding{10.f * m_windowSize.x / 100.f, 10.f * m_windowSize.y / 100.f}
+      m_padding{0.5f * m_windowSize.x / 100.f, 10.f * m_windowSize.y / 100.f}
 
 {
     sf::Vector2f gridSize{(windowSize.x - (numCols + 1) * m_padding.x) / numCols,

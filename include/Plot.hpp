@@ -31,9 +31,9 @@ class Plot
   public:
     Plot() = delete;
     Plot(size_t numRows, size_t numCols, const sf::Vector2u &windowSize)
-        : m_window{sf::VideoMode{{1280u, 720u}}, "Real Time Plot"}, m_gridManager{numRows, numCols, windowSize}
+        : m_window{sf::VideoMode{windowSize}, "Real Time Plot"}, m_gridManager{numRows, numCols, windowSize}
     {
-        m_window.setFramerateLimit(100u);
+        // m_window.setFramerateLimit(100u);
     }
     ~Plot() = default;
 

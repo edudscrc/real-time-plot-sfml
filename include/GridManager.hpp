@@ -14,6 +14,7 @@ class GridManager
 
     sf::Vector2u m_windowSize;
 
+    // Gap between grids
     sf::Vector2f m_padding;
 
     std::vector<Grid2D> m_grids{};
