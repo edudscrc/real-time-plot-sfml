@@ -26,8 +26,8 @@ class Grid2D
 
     std::vector<Point> m_dataPoints;
 
-    float m_valueMinY{-1000.f};
-    float m_valueMaxY{1000.f};
+    float m_valueMinY{-300.f};
+    float m_valueMaxY{300.f};
 
     std::unordered_map<std::string, sf::VertexArray> m_spines;
 

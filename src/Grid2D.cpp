@@ -165,6 +165,17 @@ void Grid2D::sendData(const float value)
 
 void Grid2D::update(const float value)
 {
+    if (value > m_valueMaxY)
+    {
+        m_valueMaxY = value + 300.f;
+        this->initTickLabels();
+    }
+    if (value < m_valueMinY)
+    {
+        m_valueMinY = value - 300.f;
+        this->initTickLabels();
+    }
+
     const float currentDataPointRadius = m_dataPoints[m_currentPointIdx].getRadius();
 
     m_dataPoints[m_currentPointIdx].setPosition({m_coordsMax.x, this->mapPointToGrid(value, currentDataPointRadius)});
