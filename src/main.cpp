@@ -20,16 +20,16 @@ bool running = true;
 
 void serialReaderThread()
 {
-    const char *portName = "/dev/ttyACM0";           // <<== ADJUST THIS TO YOUR LINUX SERIAL PORT
-    int hSerial = open(portName, O_RDWR | O_NOCTTY); // O_RDWR for read/write, O_NOCTTY not to become controlling tty
+    const char *portName = "/dev/ttyACM0";
+    int hSerial = open(portName, O_RDWR | O_NOCTTY);
 
     if (hSerial == -1)
-    { // Changed from INVALID_HANDLE_VALUE
+    {
         std::cerr << "Erro ao abrir " << portName << ". Erro: " << strerror(errno) << std::endl;
         return;
     }
 
-    struct termios tty; // Equivalent to DCB
+    struct termios tty;
     if (tcgetattr(hSerial, &tty) != 0)
     {
         std::cerr << "Erro ao obter parâmetros da serial (" << portName << "). Erro: " << strerror(errno) << std::endl;
@@ -37,15 +37,15 @@ void serialReaderThread()
         return;
     }
 
-    cfsetospeed(&tty, B115200); // Output speed
-    cfsetispeed(&tty, B115200); // Input speed
+    cfsetospeed(&tty, B115200);
+    cfsetispeed(&tty, B115200);
 
-    tty.c_cflag &= ~PARENB; // Clear parity bit, disabling parity (NOPARITY)
-    tty.c_cflag &= ~CSTOPB; // Clear stop field, only one stop bit used (ONESTOPBIT)
-    tty.c_cflag &= ~CSIZE;  // Clear all bits that set the data size
-    tty.c_cflag |= CS8;     // 8 bits per byte (ByteSize = 8)
+    tty.c_cflag &= ~PARENB;
+    tty.c_cflag &= ~CSTOPB;
+    tty.c_cflag &= ~CSIZE;
+    tty.c_cflag |= CS8;
 
-    tty.c_cflag &= ~CRTSCTS; // Disable RTS/CTS hardware flow control
+    tty.c_cflag &= ~CRTSCTS;
 
     tty.c_cflag |= CREAD | CLOCAL;
 
@@ -56,7 +56,7 @@ void serialReaderThread()
     tty.c_oflag &= ~OPOST;
 
     tty.c_cc[VMIN] = 0;
-    tty.c_cc[VTIME] = 1; // 1 decisecond = 100 milliseconds
+    tty.c_cc[VTIME] = 1;
 
     if (tcsetattr(hSerial, TCSANOW, &tty) != 0)
     {
@@ -69,29 +69,29 @@ void serialReaderThread()
 
     std::string buffer;
     char ch;
-    ssize_t bytesRead; // Changed from DWORD to ssize_t for POSIX read()
+    ssize_t bytesRead;
 
     std::cout << "Serial reader thread started on " << portName << std::endl;
 
     while (running)
     {
-        bytesRead = read(hSerial, &ch, 1); // Read one byte
+        bytesRead = read(hSerial, &ch, 1);
 
         if (bytesRead == -1)
         {
             if (errno == EINTR)
-            { // Interrupted by a signal, try again
+            {
                 continue;
             }
             std::cerr << "Erro ao ler da serial (" << portName << "). Erro: " << strerror(errno) << std::endl;
-            break; // Exit loop on most read errors
+            break;
         }
         else if (bytesRead == 0)
         {
             continue;
         }
         else
-        { // bytesRead > 0 (should be 1 here)
+        {
             if (ch == '\n')
             {
                 std::lock_guard<std::mutex> lock(queueMutex);
@@ -116,7 +116,7 @@ void serialReaderThread()
 
 void generateRandomValuesThread(size_t numSubplots)
 {
-    constexpr double amplitude = 409.0;
+    constexpr double amplitude = 500.0;
     constexpr double frequency = 0.5;
     double time = 0.0;
     constexpr double timeStep = 0.01;
@@ -135,14 +135,13 @@ void generateRandomValuesThread(size_t numSubplots)
         serialQueue.push(buffer);
         buffer.clear();
         queueCond.notify_one();
-        // std::this_thread::sleep_for(std::chrono::microseconds(1));
     }
 }
 
 int main()
 {
-    size_t rows{1};
-    size_t cols{1};
+    size_t rows{2};
+    size_t cols{2};
     size_t total{rows * cols};
     Plot p{rows, cols, {1920u, 1080u}};
 
@@ -150,14 +149,13 @@ int main()
     {
         for (size_t row{0}; row < rows; ++row)
         {
-            p[row][col].setLimY(2000.f, 3500.f);
             p[row][col].setDataPointsRadius(2.f);
         }
     }
 
     std::vector<float> value(total, 0.f);
-    // std::thread reader(generateRandomValuesThread, 4);
-    std::thread reader(serialReaderThread);
+    std::thread reader(generateRandomValuesThread, total);
+    // std::thread reader(serialReaderThread);
 
     while (p.window().isOpen())
     {
@@ -169,12 +167,12 @@ int main()
             }
         }
 
+        // Getting right values from queue (This has nothing to do with the Plot class)
         std::unique_lock<std::mutex> lock(queueMutex);
         queueCond.wait(lock, [] { return !serialQueue.empty(); });
         std::string data = serialQueue.front();
         serialQueue.pop();
         lock.unlock();
-
         size_t pos{};
         size_t tmpI{0};
         while ((pos = data.find("|")) != std::string::npos)

@@ -32,7 +32,7 @@ FetchContent_MakeAvailable(SFML)
 
 find_package(Threads REQUIRED)
 
-add_executable(main src/main.cpp src/Grid2D.cpp src/GridManager.cpp src/Point.cpp)
+add_executable(main src/main.cpp src/Grid2D.cpp src/GridManager.cpp src/Point.cpp src/Plot.cpp)
 target_compile_features(main PRIVATE cxx_std_17)
 
 # Add additional optimization flags specific to this target if needed

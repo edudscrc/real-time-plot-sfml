@@ -17,10 +17,13 @@ class Point
     Point();
     ~Point() = default;
 
+    void setPositionY(const float positionY);
     void setPosition(const sf::Vector2f &position);
     void setRadius(float radius);
     void setColor(const sf::Color &color);
+    void setValue(const float value);
 
+    const float &getValue() const;
     const float &getRadius() const;
 
     void update();

@@ -121,19 +121,8 @@ void Grid2D::initTickLabels()
     }
 }
 
-void Grid2D::setLimY(float minLimY, float maxLimY)
-{
-    m_valueMinY = minLimY;
-    m_valueMaxY = maxLimY;
-}
-
 void Grid2D::setDataPointsRadius(float radius)
 {
-    // m_coordsMax.x += radius * 2.f;
-    // m_coordsMax.y += radius * 2.f;
-
-    // m_size = {m_coordsMax.x - m_coordsMin.x, m_coordsMax.y - m_coordsMin.y};
-
     this->updateSpines(radius);
     m_horizontalLines.clear();
     m_verticalLines.clear();
@@ -165,20 +154,28 @@ void Grid2D::sendData(const float value)
 
 void Grid2D::update(const float value)
 {
+    if (m_firstPoint)
+    {
+        m_valueMaxY = value;
+        m_valueMinY = value;
+        m_firstPoint = false;
+    }
+
     if (value > m_valueMaxY)
     {
-        m_valueMaxY = value + 300.f;
+        m_valueMaxY = value;
         this->initTickLabels();
     }
     if (value < m_valueMinY)
     {
-        m_valueMinY = value - 300.f;
+        m_valueMinY = value;
         this->initTickLabels();
     }
 
     const float currentDataPointRadius = m_dataPoints[m_currentPointIdx].getRadius();
 
-    m_dataPoints[m_currentPointIdx].setPosition({m_coordsMax.x, this->mapPointToGrid(value, currentDataPointRadius)});
+    m_dataPoints[m_currentPointIdx].setPosition({m_coordsMax.x, this->mapPointToGrid(value)});
+    m_dataPoints[m_currentPointIdx].setValue(value);
 
     ++m_currentPointIdx;
 
@@ -190,6 +187,7 @@ void Grid2D::update(const float value)
     for (auto &point : m_dataPoints)
     {
         point.update();
+        point.setPositionY(this->mapPointToGrid(point.getValue()));
     }
 }
 
@@ -231,11 +229,10 @@ void Grid2D::render(sf::RenderWindow &window) const
     window.draw(m_spines.at("left"));
 }
 
-const float Grid2D::mapPointToGrid(const float pointValue, const float pointRadius) const
+const float Grid2D::mapPointToGrid(const float pointValue) const
 {
     float valueRangeY{m_valueMaxY - m_valueMinY};
     float normalizedValue{(pointValue - m_valueMinY) / valueRangeY};
-    // return (m_coordsMax.y - pointRadius * 2.f) - (normalizedValue * m_sizeOld.y);
     return m_coordsMax.y - (normalizedValue * m_size.y);
 }
 
@@ -245,7 +242,4 @@ const float Grid2D::mapGridToPoint(const float gridValue) const
         ((gridValue - m_coordsMax.y) * (m_valueMaxY - m_valueMinY) - m_valueMinY * m_sizeOld.y) / m_sizeOld.y;
     pointValue *= -1.f;
     return pointValue;
-    // float valueRangeY{m_valueMaxY - m_valueMinY};
-    // float normalizedValue{(m_coordsMax.y - gridValue) / m_sizeOld.y};
-    // return m_valueMinY + (normalizedValue * valueRangeY);
 }

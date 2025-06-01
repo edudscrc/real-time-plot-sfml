@@ -26,8 +26,9 @@ class Grid2D
 
     std::vector<Point> m_dataPoints;
 
-    float m_valueMinY{-300.f};
-    float m_valueMaxY{300.f};
+    bool m_firstPoint{true};
+    float m_valueMinY;
+    float m_valueMaxY;
 
     std::unordered_map<std::string, sf::VertexArray> m_spines;
 
@@ -51,8 +52,6 @@ class Grid2D
     void initTicks();
     void initTickLabels();
 
-    void setLimY(float minLimY, float maxLimY);
-
     void setDataPointsRadius(float radius);
     void setDataPointsColor(const sf::Color &color);
 
@@ -61,7 +60,7 @@ class Grid2D
     void update(const float value);
     void render(sf::RenderWindow &window) const;
 
-    const float mapPointToGrid(const float pointValue, const float pointRadius) const;
+    const float mapPointToGrid(const float pointValue) const;
     const float mapGridToPoint(const float gridValue) const;
 };
 

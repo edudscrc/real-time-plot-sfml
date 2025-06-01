@@ -7,6 +7,12 @@ Point::Point()
     m_shape.setPosition(m_position);
 }
 
+void Point::setPositionY(const float positionY)
+{
+    m_position.y = positionY;
+    m_shape.setPosition(m_position);
+}
+
 void Point::setPosition(const sf::Vector2f &position)
 {
     m_position = position;
@@ -24,6 +30,16 @@ void Point::setColor(const sf::Color &color)
 {
     m_color = color;
     m_shape.setFillColor(color);
+}
+
+void Point::setValue(const float value)
+{
+    m_value = value;
+}
+
+const float& Point::getValue() const
+{
+    return m_value;
 }
 
 const float &Point::getRadius() const

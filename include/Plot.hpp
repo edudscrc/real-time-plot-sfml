@@ -1,58 +1,60 @@
 #ifndef PLOT_HPP
 #define PLOT_HPP
 
-#include "GridManager.hpp"
+#include "Grid2D.hpp"
+#include <cstddef>
+#include <vector>
 #include <SFML/Graphics.hpp>
+
+#include <iostream>
 
 class Plot
 {
   private:
-    GridManager m_gridManager;
+  	sf::RenderWindow m_window;
 
-    sf::RenderWindow m_window;
+	size_t m_numRows;
+	size_t m_numCols;
+	size_t m_numGrids;
+
+	sf::Vector2u m_windowSize;
+
+    // Gap between grids
+	sf::Vector2f m_padding;
+
+	std::vector<Grid2D> m_grids{};
 
     class PlotProxy
     {
       private:
-        GridManager &m_gm;
+	    std::vector<Grid2D>& m_grids;
+		size_t m_numRows;
         size_t m_row;
 
       public:
-        PlotProxy(GridManager &gm, size_t row) : m_gm{gm}, m_row{row}
+        PlotProxy(std::vector<Grid2D>& grids, size_t numRows, size_t row) : m_grids{grids}, m_numRows{numRows}, m_row{row}
         {
         }
 
         Grid2D &operator[](size_t col)
         {
-            return m_gm.getGrid(m_row, col);
+			return m_grids[m_row + col * m_numRows];
         }
     };
 
   public:
     Plot() = delete;
-    Plot(size_t numRows, size_t numCols, const sf::Vector2u &windowSize)
-        : m_window{sf::VideoMode{windowSize}, "Real Time Plot"}, m_gridManager{numRows, numCols, windowSize}
-    {
-        // m_window.setFramerateLimit(100u);
-    }
+    Plot(size_t numRows, size_t numCols, const sf::Vector2u &windowSize);
     ~Plot() = default;
 
     PlotProxy operator[](size_t row)
     {
-        return PlotProxy(m_gridManager, row);
+        return PlotProxy(m_grids, m_numRows, row);
     }
 
-    sf::RenderWindow &window()
-    {
-        return m_window;
-    }
+    sf::RenderWindow &window();
 
-    void render()
-    {
-        m_window.clear(sf::Color::White);
-        m_gridManager.render(m_window);
-        m_window.display();
-    }
+    void render();
 };
 
 #endif
