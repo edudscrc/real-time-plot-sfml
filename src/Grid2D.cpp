@@ -106,6 +106,7 @@ void Grid2D::initTicks()
 
 void Grid2D::initTickLabels()
 {
+    m_tickLabelsY.clear();
     for (const auto &tick : m_ticksY)
     {
         float pointValue{mapGridToPoint(tick[0].position.y)};
